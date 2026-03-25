@@ -10,5 +10,11 @@ describe("startup", function () {
     assert.isFunction(
       (Zotero[config.addonInstance] as any).api.generateTagsForSelection,
     );
+    assert.isFunction(
+      (Zotero[config.addonInstance] as any).api.generateTagsForItem,
+    );
+    assert.isFunction(
+      (Zotero[config.addonInstance] as any).api.generateTagsForItems,
+    );
   });
 });

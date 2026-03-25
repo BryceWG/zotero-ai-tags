@@ -40,6 +40,16 @@
 
 当前默认对接 OpenAI 兼容的 `/chat/completions` 接口。
 
+## 插件 API
+
+其他 Zotero 插件可以通过 `Zotero.AITags.api` 调用：
+
+```js
+await Zotero.AITags.api.generateTagsForSelection();
+await Zotero.AITags.api.generateTagsForItem(item);
+await Zotero.AITags.api.generateTagsForItems(items);
+```
+
 ## 开发环境
 
 ### 环境要求

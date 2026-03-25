@@ -39,6 +39,16 @@ Open `Edit -> Preferences -> Zotero AI Tags` and configure:
 
 Default API settings target the OpenAI-compatible `/chat/completions` interface.
 
+## Plugin API
+
+Other Zotero plugins can call the exposed API on `Zotero.AITags.api`:
+
+```js
+await Zotero.AITags.api.generateTagsForSelection();
+await Zotero.AITags.api.generateTagsForItem(item);
+await Zotero.AITags.api.generateTagsForItems(items);
+```
+
 ## Development
 
 ### Requirements

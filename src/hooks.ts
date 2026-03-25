@@ -1,5 +1,9 @@
 import { registerAITagsMenu } from "./modules/aiTags/command";
-import { generateTagsForSelection } from "./modules/aiTags/service";
+import {
+  generateTagsForItem,
+  generateTagsForItems,
+  generateTagsForSelection,
+} from "./modules/aiTags/service";
 import { getString, initLocale } from "./utils/locale";
 import { registerPrefsScripts } from "./modules/preferenceScript";
 import { createZToolkit } from "./utils/ztoolkit";
@@ -15,6 +19,8 @@ async function onStartup() {
 
   registerPrefsPane();
   addon.api = {
+    generateTagsForItem,
+    generateTagsForItems,
     generateTagsForSelection,
   };
 

@@ -20,6 +20,10 @@ interface ProgressState {
   total: number;
 }
 
+interface GenerateTagsOptions {
+  throwOnFatalError?: boolean;
+}
+
 class LLMRequestError extends Error {
   constructor(
     message: string,
@@ -33,6 +37,25 @@ class LLMRequestError extends Error {
 }
 
 export async function generateTagsForSelection() {
+  const items = await getSelectedRegularItems();
+  return generateTagsForResolvedItems(items);
+}
+
+export async function generateTagsForItems(items: Zotero.Item[]) {
+  const normalizedItems = await normalizeRegularItems(items);
+  return generateTagsForResolvedItems(normalizedItems, {
+    throwOnFatalError: true,
+  });
+}
+
+export async function generateTagsForItem(item: Zotero.Item) {
+  return generateTagsForItems([item]);
+}
+
+async function generateTagsForResolvedItems(
+  items: Zotero.Item[],
+  options: GenerateTagsOptions = {},
+) {
   const progress = new ztoolkit.ProgressWindow(addon.data.config.addonName, {
     closeOnClick: true,
     closeTime: -1,
@@ -48,7 +71,6 @@ export async function generateTagsForSelection() {
     const prefs = getTaggingPrefs();
     validateTaggingPrefs(prefs);
 
-    const items = await getSelectedRegularItems();
     if (!items.length) {
       throw new Error("error-no-selection");
     }
@@ -167,6 +189,7 @@ export async function generateTagsForSelection() {
       progress: 100,
     });
     progress.startCloseTimer(8000);
+    return summary;
   } catch (error) {
     progress.changeLine({
       text: getString("progress-failure", {
@@ -178,6 +201,16 @@ export async function generateTagsForSelection() {
       progress: 100,
     });
     progress.startCloseTimer(10000);
+
+    if (options.throwOnFatalError) {
+      throw error;
+    }
+
+    return {
+      success: 0,
+      skipped: 0,
+      failed: items.length,
+    } satisfies BatchSummary;
   }
 }
 
@@ -185,19 +218,12 @@ async function getSelectedRegularItems() {
   const selectedItems = ztoolkit
     .getGlobal("ZoteroPane")
     .getSelectedItems() as Zotero.Item[];
+  return normalizeRegularItems(selectedItems);
+}
+
+async function normalizeRegularItems(items: Zotero.Item[]) {
   const mappedItems = await Promise.all(
-    selectedItems.map(async (item) => {
-      if (item.isRegularItem() && !item.isFeedItem) {
-        return item;
-      }
-      if (item.parentItemID) {
-        const parent = await Zotero.Items.getAsync(item.parentItemID);
-        if (parent?.isRegularItem() && !parent.isFeedItem) {
-          return parent;
-        }
-      }
-      return null;
-    }),
+    items.map((item) => toRegularItem(item)),
   );
 
   const uniqueItems = new Map<number, Zotero.Item>();
@@ -207,6 +233,19 @@ async function getSelectedRegularItems() {
     }
   }
   return [...uniqueItems.values()];
+}
+
+async function toRegularItem(item: Zotero.Item) {
+  if (item.isRegularItem() && !item.isFeedItem) {
+    return item;
+  }
+  if (item.parentItemID) {
+    const parent = await Zotero.Items.getAsync(item.parentItemID);
+    if (parent?.isRegularItem() && !parent.isFeedItem) {
+      return parent;
+    }
+  }
+  return null;
 }
 
 async function buildItemOverview(item: Zotero.Item, prefs: TaggingPrefs) {
