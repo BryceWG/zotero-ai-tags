@@ -1,5 +1,6 @@
 import { getPref } from "../../utils/prefs";
 import { parseCollectionRulesPref } from "./collectionRules";
+import { loadLLMConfigState } from "./llmConfigs";
 import { TaggingPrefs } from "./types";
 
 export const DEFAULT_USER_RULES = [
@@ -10,12 +11,13 @@ export const DEFAULT_USER_RULES = [
 ].join("\n");
 
 export function getTaggingPrefs(): TaggingPrefs {
+  const { activeConfig } = loadLLMConfigState();
   return {
     enable: getPref("enable"),
-    apiBaseURL: normalizeURL(getPref("apiBaseURL")),
-    apiKey: String(getPref("apiKey") || "").trim(),
-    model: String(getPref("model") || "").trim(),
-    apiExtraParams: parseAPIExtraParams(getPref("apiExtraParams")),
+    apiBaseURL: normalizeURL(activeConfig.apiBaseURL),
+    apiKey: String(activeConfig.apiKey || "").trim(),
+    model: String(activeConfig.model || "").trim(),
+    apiExtraParams: parseAPIExtraParams(activeConfig.apiExtraParams),
     userRules: String(getPref("userRules") || DEFAULT_USER_RULES).trim(),
     collectionRules: parseCollectionRulesPref(
       getPref("collectionRules" as never),

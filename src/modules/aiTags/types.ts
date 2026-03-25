@@ -14,6 +14,15 @@ export interface TaggingPrefs {
   debug: boolean;
 }
 
+export interface LLMConfig {
+  id: string;
+  name: string;
+  apiBaseURL: string;
+  apiKey: string;
+  model: string;
+  apiExtraParams: string;
+}
+
 export interface CollectionRuleConfig {
   libraryID: number;
   collectionID: number;

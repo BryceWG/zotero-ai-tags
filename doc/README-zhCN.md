@@ -28,6 +28,7 @@
 
 1. 打开 Zotero 设置中的 `Zotero AI Tags`
 2. 填写：
+   - `当前 AI 配置`：可保存并切换多套 LLM 配置
    - `API Base URL`
    - `API Key`
    - `模型名称`

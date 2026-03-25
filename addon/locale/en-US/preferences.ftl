@@ -2,6 +2,11 @@ pref-title = AI Tags
 pref-description = Auto-generate tags from abstracts and PDFs
 
 pref-section-api = API Configuration
+pref-active-llm-config = Current AI Config
+pref-active-llm-config-help = Save multiple API setups and switch the fields below in one step
+pref-add-llm-config = Duplicate Config
+pref-delete-llm-config = Delete Config
+pref-llm-config-name = Config Name
 pref-api-base-url = API Endpoint
 pref-api-key = API Key
 pref-model = Model

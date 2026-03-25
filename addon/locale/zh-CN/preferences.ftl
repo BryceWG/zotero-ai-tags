@@ -2,6 +2,11 @@ pref-title = AI 标签
 pref-description = 根据文献摘要和 PDF 内容自动生成标签
 
 pref-section-api = API 配置
+pref-active-llm-config = 当前 AI 配置
+pref-active-llm-config-help = 可保存多套接口参数，切换后下方字段会自动同步
+pref-add-llm-config = 复制配置
+pref-delete-llm-config = 删除配置
+pref-llm-config-name = 配置名称
 pref-api-base-url = 接口地址
 pref-api-key = API 密钥
 pref-model = 模型

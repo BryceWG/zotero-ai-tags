@@ -28,7 +28,11 @@
     .__addonRef__-prefs-row--3col { grid-template-columns: repeat(3, 1fr); }
     .__addonRef__-prefs-field--full { grid-column: 1 / -1; }
     .__addonRef__-prefs-actions { display: flex; align-items: center; gap: 8px;
-    flex-wrap: wrap; } .__addonRef__-prefs-status { min-height: 1.4em;
+    flex-wrap: wrap; } .__addonRef__-prefs-actions--inline { flex-wrap:
+    nowrap; } .__addonRef__-prefs-actions--inline select { flex: 1 1 auto;
+    min-width: 0; } .__addonRef__-prefs-actions--inline .__addonRef__-prefs-button
+    { flex: 0 0 auto; white-space: nowrap; } .__addonRef__-prefs-status {
+    min-height: 1.4em;
     font-size: 12px; } .__addonRef__-prefs-status[data-state="pending"] { color:
     color-mix(in srgb, currentColor 70%, #d4a000); }
     .__addonRef__-prefs-status[data-state="success"] { color: color-mix(in srgb,
@@ -71,6 +75,61 @@
         class="__addonRef__-prefs-card-title"
         data-l10n-id="pref-section-api"
       ></html:h3>
+
+      <html:div class="__addonRef__-prefs-row">
+        <html:div
+          class="__addonRef__-prefs-field __addonRef__-prefs-field--full"
+        >
+          <html:label
+            for="zotero-prefpane-__addonRef__-llmConfigSelect"
+            data-l10n-id="pref-active-llm-config"
+          ></html:label>
+          <html:div
+            class="__addonRef__-prefs-help"
+            data-l10n-id="pref-active-llm-config-help"
+          ></html:div>
+          <html:div
+            class="__addonRef__-prefs-actions __addonRef__-prefs-actions--inline"
+          >
+            <html:select
+              id="zotero-prefpane-__addonRef__-llmConfigSelect"
+            ></html:select>
+            <html:button
+              type="button"
+              class="__addonRef__-prefs-button"
+              id="zotero-prefpane-__addonRef__-addLLMConfig"
+              data-l10n-id="pref-add-llm-config"
+            ></html:button>
+            <html:button
+              type="button"
+              class="__addonRef__-prefs-button"
+              id="zotero-prefpane-__addonRef__-deleteLLMConfig"
+              data-l10n-id="pref-delete-llm-config"
+            ></html:button>
+          </html:div>
+          <html:span
+            class="__addonRef__-prefs-status"
+            id="zotero-prefpane-__addonRef__-llmConfigStatus"
+            role="status"
+            aria-live="polite"
+          ></html:span>
+        </html:div>
+      </html:div>
+
+      <html:div class="__addonRef__-prefs-row">
+        <html:div
+          class="__addonRef__-prefs-field __addonRef__-prefs-field--full"
+        >
+          <html:label
+            for="zotero-prefpane-__addonRef__-llmConfigName"
+            data-l10n-id="pref-llm-config-name"
+          ></html:label>
+          <html:input
+            type="text"
+            id="zotero-prefpane-__addonRef__-llmConfigName"
+          ></html:input>
+        </html:div>
+      </html:div>
 
       <html:div class="__addonRef__-prefs-row">
         <html:div

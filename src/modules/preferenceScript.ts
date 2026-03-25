@@ -6,19 +6,32 @@ import {
   serializeCollectionRulesPref,
   syncCollectionRuleConfig,
 } from "./aiTags/collectionRules";
+import {
+  createLLMConfig,
+  loadLLMConfigState,
+  saveLLMConfigState as persistStoredLLMConfigState,
+} from "./aiTags/llmConfigs";
 import { DEFAULT_USER_RULES } from "./aiTags/prefs";
 import { testChatCompletionConnection } from "./aiTags/service";
-import { CollectionRuleConfig } from "./aiTags/types";
+import { CollectionRuleConfig, LLMConfig } from "./aiTags/types";
 import { getPref, setPref } from "../utils/prefs";
 
 interface PrefsWindowState {
   collectionRules: CollectionRuleConfig[];
+  llmConfigs: LLMConfig[];
+  activeLLMConfigId: string;
 }
 
 const prefsWindowState = new WeakMap<Window, PrefsWindowState>();
 
 export async function registerPrefsScripts(window: Window) {
   addon.data.prefs = { window };
+  const llmConfigState = loadLLMConfigState();
+  prefsWindowState.set(window, {
+    collectionRules: [],
+    llmConfigs: llmConfigState.configs,
+    activeLLMConfigId: llmConfigState.activeConfigId,
+  });
 
   setCheckboxValue(window, "enable", getPref("enable"));
   setCheckboxValue(
@@ -33,10 +46,6 @@ export async function registerPrefsScripts(window: Window) {
   );
   setCheckboxValue(window, "debug", getPref("debug"));
 
-  setInputValue(window, "apiBaseURL", getPref("apiBaseURL"));
-  setInputValue(window, "apiKey", getPref("apiKey"));
-  setInputValue(window, "model", getPref("model"));
-  setTextAreaValue(window, "apiExtraParams", getPref("apiExtraParams"));
   ensureNumberPref(window, "maxTags", 8, 1, 20);
   ensureNumberPref(window, "maxConcurrentRequests", 3, 1, 10);
   ensureNumberPref(window, "requestsPerSecond", 3, 1, 20);
@@ -51,16 +60,292 @@ export async function registerPrefsScripts(window: Window) {
   bindCheckbox(window, "fallbackToAttachmentText");
   bindCheckbox(window, "debug");
 
-  bindText(window, "apiBaseURL");
-  bindText(window, "apiKey");
-  bindText(window, "model");
-  bindTextArea(window, "apiExtraParams");
   bindNumber(window, "maxTags", 8, 1, 20);
   bindNumber(window, "maxConcurrentRequests", 3, 1, 10);
   bindNumber(window, "requestsPerSecond", 3, 1, 20);
   bindTextArea(window, "userRules");
+  initializeLLMConfigPrefs(window);
   bindTestAPIButton(window);
   await initializeCollectionRulePrefs(window);
+}
+
+function initializeLLMConfigPrefs(window: Window) {
+  bindLLMConfigControls(window);
+  renderLLMConfigSelect(window);
+  syncLLMConfigForm(window);
+  setLLMConfigStatus(window, "idle", "");
+}
+
+function bindLLMConfigControls(window: Window) {
+  const select = getElement<HTMLSelectElement>(window, "llmConfigSelect");
+  if (select) {
+    select.onchange = () => {
+      handleSwitchLLMConfig(window, select.value);
+    };
+  }
+
+  const addButton = getElement<HTMLButtonElement>(window, "addLLMConfig");
+  if (addButton) {
+    addButton.onclick = () => {
+      handleDuplicateLLMConfig(window);
+    };
+  }
+
+  const deleteButton = getElement<HTMLButtonElement>(window, "deleteLLMConfig");
+  if (deleteButton) {
+    deleteButton.onclick = () => {
+      handleDeleteLLMConfig(window);
+    };
+  }
+
+  bindActiveLLMConfigText(window, "llmConfigName", "name");
+  bindActiveLLMConfigText(window, "apiBaseURL", "apiBaseURL");
+  bindActiveLLMConfigText(window, "apiKey", "apiKey");
+  bindActiveLLMConfigText(window, "model", "model");
+  bindActiveLLMConfigTextArea(window, "apiExtraParams", "apiExtraParams");
+}
+
+function handleSwitchLLMConfig(window: Window, nextConfigId: string) {
+  syncActiveLLMConfigDraft(window);
+  const state = getPrefsWindowState(window);
+  state.activeLLMConfigId = nextConfigId;
+  const activeConfig = persistLLMConfigPrefs(window);
+  renderLLMConfigSelect(window);
+  syncLLMConfigForm(window);
+  setLLMConfigStatus(
+    window,
+    "success",
+    getString("llm-config-switched" as never, {
+      args: { name: activeConfig.name },
+    }),
+  );
+}
+
+function handleDuplicateLLMConfig(window: Window) {
+  syncActiveLLMConfigDraft(window);
+  const state = getPrefsWindowState(window);
+  const activeConfig = getActiveLLMConfig(window);
+  const newConfig = createLLMConfig({
+    ...activeConfig,
+    name: getNextLLMConfigName(activeConfig.name, state.llmConfigs),
+  });
+
+  state.llmConfigs = [...state.llmConfigs, newConfig];
+  state.activeLLMConfigId = newConfig.id;
+  persistLLMConfigPrefs(window);
+  renderLLMConfigSelect(window);
+  syncLLMConfigForm(window);
+  setLLMConfigStatus(
+    window,
+    "success",
+    getString("llm-config-added" as never, {
+      args: { name: newConfig.name },
+    }),
+  );
+}
+
+function handleDeleteLLMConfig(window: Window) {
+  syncActiveLLMConfigDraft(window);
+  const state = getPrefsWindowState(window);
+  if (state.llmConfigs.length <= 1) {
+    setLLMConfigStatus(
+      window,
+      "error",
+      getString("llm-config-minimum" as never),
+    );
+    return;
+  }
+
+  const activeConfig = getActiveLLMConfig(window);
+  const confirmed = window.confirm(
+    getString("llm-config-remove-confirm" as never, {
+      args: { name: activeConfig.name },
+    }),
+  );
+  if (!confirmed) {
+    return;
+  }
+
+  const activeIndex = state.llmConfigs.findIndex(
+    (config) => config.id === state.activeLLMConfigId,
+  );
+  state.llmConfigs = state.llmConfigs.filter(
+    (config) => config.id !== state.activeLLMConfigId,
+  );
+
+  const nextIndex = Math.min(activeIndex, state.llmConfigs.length - 1);
+  state.activeLLMConfigId = state.llmConfigs[Math.max(0, nextIndex)].id;
+  persistLLMConfigPrefs(window);
+  renderLLMConfigSelect(window);
+  syncLLMConfigForm(window);
+  setLLMConfigStatus(
+    window,
+    "success",
+    getString("llm-config-removed" as never, {
+      args: { name: activeConfig.name },
+    }),
+  );
+}
+
+function renderLLMConfigSelect(window: Window) {
+  const select = getElement<HTMLSelectElement>(window, "llmConfigSelect");
+  if (!select) {
+    return;
+  }
+
+  const state = getPrefsWindowState(window);
+  select.replaceChildren();
+  for (const config of state.llmConfigs) {
+    const option = window.document.createElement("option");
+    option.value = config.id;
+    option.textContent = config.name;
+    select.appendChild(option);
+  }
+  select.value = state.activeLLMConfigId;
+
+  const deleteButton = getElement<HTMLButtonElement>(window, "deleteLLMConfig");
+  if (deleteButton) {
+    deleteButton.disabled = state.llmConfigs.length <= 1;
+  }
+}
+
+function syncLLMConfigForm(window: Window) {
+  const activeConfig = getActiveLLMConfig(window);
+  setInputValue(window, "llmConfigName", activeConfig.name);
+  setInputValue(window, "apiBaseURL", activeConfig.apiBaseURL);
+  setInputValue(window, "apiKey", activeConfig.apiKey);
+  setInputValue(window, "model", activeConfig.model);
+  setTextAreaValue(window, "apiExtraParams", activeConfig.apiExtraParams);
+}
+
+function syncActiveLLMConfigDraft(window: Window) {
+  const state = getPrefsWindowState(window);
+  const activeIndex = state.llmConfigs.findIndex(
+    (config) => config.id === state.activeLLMConfigId,
+  );
+  if (activeIndex < 0) {
+    return null;
+  }
+
+  const previousConfig = state.llmConfigs[activeIndex];
+  state.llmConfigs[activeIndex] = {
+    ...previousConfig,
+    name:
+      getInputValue(window, "llmConfigName") ||
+      previousConfig.name ||
+      `Config ${activeIndex + 1}`,
+    apiBaseURL: getInputValue(window, "apiBaseURL"),
+    apiKey: getInputValue(window, "apiKey"),
+    model: getInputValue(window, "model"),
+    apiExtraParams: getTextAreaValue(window, "apiExtraParams"),
+  };
+
+  const activeConfig = persistLLMConfigPrefs(window);
+  if (activeConfig.name !== previousConfig.name) {
+    renderLLMConfigSelect(window);
+  }
+  return activeConfig;
+}
+
+function persistLLMConfigPrefs(window: Window) {
+  const state = getPrefsWindowState(window);
+  const normalizedState = persistStoredLLMConfigState({
+    configs: state.llmConfigs,
+    activeConfigId: state.activeLLMConfigId,
+  });
+  state.llmConfigs = normalizedState.configs;
+  state.activeLLMConfigId = normalizedState.activeConfigId;
+  return normalizedState.activeConfig;
+}
+
+function getActiveLLMConfig(window: Window) {
+  const state = getPrefsWindowState(window);
+  const activeConfig = state.llmConfigs.find(
+    (config) => config.id === state.activeLLMConfigId,
+  );
+  if (activeConfig) {
+    return activeConfig;
+  }
+  return persistLLMConfigPrefs(window);
+}
+
+function bindActiveLLMConfigText(
+  window: Window,
+  elementKey: string,
+  configKey: keyof LLMConfig,
+) {
+  getElement<HTMLInputElement>(window, elementKey)?.addEventListener(
+    "change",
+    (event: Event) => {
+      const state = getPrefsWindowState(window);
+      const activeIndex = state.llmConfigs.findIndex(
+        (config) => config.id === state.activeLLMConfigId,
+      );
+      if (activeIndex < 0) {
+        return;
+      }
+
+      state.llmConfigs[activeIndex] = {
+        ...state.llmConfigs[activeIndex],
+        [configKey]: String(
+          (event.currentTarget as HTMLInputElement).value,
+        ).trim(),
+      };
+      persistLLMConfigPrefs(window);
+      syncLLMConfigForm(window);
+      if (configKey === "name") {
+        renderLLMConfigSelect(window);
+      }
+    },
+  );
+}
+
+function bindActiveLLMConfigTextArea(
+  window: Window,
+  elementKey: string,
+  configKey: keyof LLMConfig,
+) {
+  getElement<HTMLTextAreaElement>(window, elementKey)?.addEventListener(
+    "change",
+    (event: Event) => {
+      const state = getPrefsWindowState(window);
+      const activeIndex = state.llmConfigs.findIndex(
+        (config) => config.id === state.activeLLMConfigId,
+      );
+      if (activeIndex < 0) {
+        return;
+      }
+
+      state.llmConfigs[activeIndex] = {
+        ...state.llmConfigs[activeIndex],
+        [configKey]: String(
+          (event.currentTarget as HTMLTextAreaElement).value,
+        ).trim(),
+      };
+      persistLLMConfigPrefs(window);
+      syncLLMConfigForm(window);
+    },
+  );
+}
+
+function getNextLLMConfigName(baseName: string, configs: LLMConfig[]) {
+  const trimmedBaseName = baseName.trim() || "Config";
+  const existingNames = new Set(
+    configs.map((config) => config.name.trim().toLocaleLowerCase()),
+  );
+
+  if (!existingNames.has(trimmedBaseName.toLocaleLowerCase())) {
+    return trimmedBaseName;
+  }
+
+  for (let index = 2; index < 1000; index += 1) {
+    const candidate = `${trimmedBaseName} ${index}`;
+    if (!existingNames.has(candidate.toLocaleLowerCase())) {
+      return candidate;
+    }
+  }
+
+  return `${trimmedBaseName} ${Date.now()}`;
 }
 
 function bindTestAPIButton(window: Window) {
@@ -70,7 +355,7 @@ function bindTestAPIButton(window: Window) {
     async (event: Event) => {
       const button = event.currentTarget as HTMLButtonElement;
       button.disabled = true;
-      syncAPIRequestPrefs(window);
+      syncActiveLLMConfigDraft(window);
       setTestAPIStatus(window, "pending", getString("api-test-start" as never));
 
       try {
@@ -97,7 +382,7 @@ function bindTestAPIButton(window: Window) {
 
 async function initializeCollectionRulePrefs(window: Window) {
   const collectionRules = await loadCollectionRules();
-  prefsWindowState.set(window, { collectionRules });
+  getPrefsWindowState(window).collectionRules = collectionRules;
 
   bindCollectionRuleControls(window);
   setCollectionRulesStatus(window, "idle", "");
@@ -495,6 +780,15 @@ function setCollectionRulesStatus(
   setStatusElementState(element, state, message);
 }
 
+function setLLMConfigStatus(
+  window: Window,
+  state: "idle" | "success" | "error",
+  message: string,
+) {
+  const element = getElement<HTMLSpanElement>(window, "llmConfigStatus");
+  setStatusElementState(element, state, message);
+}
+
 function setStatusElementState(
   element: HTMLSpanElement | null,
   state: "idle" | "pending" | "success" | "error",
@@ -509,16 +803,6 @@ function setStatusElementState(
     element.dataset.state = state;
   }
   element.textContent = message;
-}
-
-function syncAPIRequestPrefs(window: Window) {
-  setPref("apiBaseURL", getInputValue(window, "apiBaseURL") as never);
-  setPref("apiKey", getInputValue(window, "apiKey") as never);
-  setPref("model", getInputValue(window, "model") as never);
-  setPref(
-    "apiExtraParams",
-    getTextAreaValue(window, "apiExtraParams") as never,
-  );
 }
 
 function getLocalizedErrorMessage(error: unknown) {
@@ -541,21 +825,6 @@ function bindCheckbox(
       setPref(
         key,
         Boolean((event.currentTarget as XUL.Checkbox).checked) as never,
-      );
-    },
-  );
-}
-
-function bindText(
-  window: Window,
-  key: keyof _ZoteroTypes.Prefs["PluginPrefsMap"],
-) {
-  getElement<HTMLInputElement>(window, key)?.addEventListener(
-    "change",
-    (event: Event) => {
-      setPref(
-        key,
-        String((event.currentTarget as HTMLInputElement).value).trim() as never,
       );
     },
   );

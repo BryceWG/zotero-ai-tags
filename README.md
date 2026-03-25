@@ -26,6 +26,7 @@ The current implementation is intentionally conservative:
 
 Open `Edit -> Preferences -> Zotero AI Tags` and configure:
 
+- `Current AI Config` selector for switching between multiple saved LLM setups
 - `API Base URL`
 - `API Key`
 - `Model`

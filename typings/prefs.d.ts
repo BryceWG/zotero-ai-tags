@@ -12,6 +12,8 @@ declare namespace _ZoteroTypes {
       "apiKey": string;
       "model": string;
       "apiExtraParams": string;
+      "llmConfigs": string;
+      "activeLLMConfigId": string;
       "userRules": string;
       "collectionRules": string;
       "maxTags": number;
