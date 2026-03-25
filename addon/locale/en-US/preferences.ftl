@@ -1,28 +1,34 @@
-pref-title = AI Tags Settings
-pref-description = When items are selected, the plugin reads the abstract and the first page of the PDF attachment, sends the overview to an OpenAI-compatible model, and writes the generated tags back to Zotero.
-pref-enable =
-    .label = Enable
-pref-api-base-url = API Base URL
+pref-title = AI Tags
+pref-description = Auto-generate tags from abstracts and PDFs
+
+pref-section-api = API Configuration
+pref-api-base-url = API Endpoint
 pref-api-key = API Key
 pref-model = Model
-pref-api-extra-params = API Extra Params
-pref-api-extra-params-help = Provide a JSON object to inject into the chat request body, such as extra temperature, max_tokens, or response_format fields.
-pref-test-api-connection = Test API Connection
-pref-user-rules = Tagging Rules
-pref-user-rules-help = These rules are sent together with the abstract and the first PDF page to control tag style and scope.
-pref-collection-rules = Collection Tagging Rules
-pref-collection-rules-help = Add extra tagging requirements for existing collections. These rules apply to the selected collection and all subcollections, and are appended after the global rules.
+pref-api-extra-params = Advanced Parameters (Optional)
+pref-api-extra-params-help = Enter as JSON, e.g., {"temperature": 0.7}
+pref-test-api-connection = Test Connection
+
+pref-section-rules = Tag Rules
+pref-max-tags = Max Tags
+pref-user-rules = Generation Rules
+pref-user-rules-help = Tell the AI what kind of tags you want
+
+pref-section-collection = Collection Rules
+pref-collection-rules-help = Set special rules for different collections
 pref-collection-rule-collection = Select Collection
-pref-collection-rule-add = Add Collection Rule
-pref-collection-rules-list = Configured Collection Rules
-pref-collection-rules-list-help = If an item belongs to multiple non-overlapping collection rules, all of those collection rules are applied together.
-pref-max-tags = Maximum tags per item
-pref-max-concurrent-requests = Maximum concurrent API requests
-pref-requests-per-second = Maximum API requests per second (RPS)
+pref-collection-rule-add = Add Rule
+pref-collection-rules-list = Configured Rules
+pref-collection-rules-list-help = Subcollections inherit rules from parent
+
+pref-section-advanced = Advanced Options
+pref-max-concurrent-requests = Concurrent Requests
+pref-requests-per-second = Requests Per Second
 pref-preserve-existing-tags =
-    .label = Keep existing tags and only append new ones
+    .label = Keep existing tags
 pref-fallback-attachment-text =
-    .label = Fall back to the beginning of attachment full text when first-page extraction fails
+    .label = Try full text if first page fails
 pref-debug =
-    .label = Enable debug logging
-pref-help = { $name } v{ $version }, build time { $time }. Changes take effect immediately.
+    .label = Enable debug mode
+
+pref-help = { $name } v{ $version } · Built { $time }

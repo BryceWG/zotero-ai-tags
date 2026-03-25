@@ -1,28 +1,34 @@
-pref-title = AI 标签设置
-pref-description = 选中条目后，插件会读取摘要与 PDF 附件第一页文本，调用兼容 OpenAI 的大模型接口生成标签，并写回 Zotero 标签栏。
-pref-enable =
-    .label = 启用插件
-pref-api-base-url = API Base URL
-pref-api-key = API Key
-pref-model = 模型名称
-pref-api-extra-params = API 额外参数
-pref-api-extra-params-help = 填写 JSON 对象后会直接注入聊天请求体，可用于补充 temperature、max_tokens、response_format 等字段。
-pref-test-api-connection = 测试 API 连通性
-pref-user-rules = 标签生成规则
-pref-user-rules-help = 这些规则会和条目摘要、PDF 首页文本一起发送给模型，用于约束标签风格与数量。
-pref-collection-rules = 分类标签规则
-pref-collection-rules-help = 可为已有分类配置额外的标签要求。这些要求适用于该分类及所有子分类，并会在通用规则后追加到提示词中。
+pref-title = AI 标签
+pref-description = 根据文献摘要和 PDF 内容自动生成标签
+
+pref-section-api = API 配置
+pref-api-base-url = 接口地址
+pref-api-key = API 密钥
+pref-model = 模型
+pref-api-extra-params = 高级参数（可选）
+pref-api-extra-params-help = 以 JSON 格式填写，例如：{"temperature": 0.7}
+pref-test-api-connection = 测试连接
+
+pref-section-rules = 标签规则
+pref-max-tags = 最大标签数
+pref-user-rules = 生成规则
+pref-user-rules-help = 告诉 AI 你希望生成什么样的标签
+
+pref-section-collection = 分类规则
+pref-collection-rules-help = 为不同分类设置特殊规则
 pref-collection-rule-collection = 选择分类
-pref-collection-rule-add = 添加分类规则
-pref-collection-rules-list = 已配置的分类规则
-pref-collection-rules-list-help = 若条目同时属于多个不重合的分类规则，这些分类规则会一并生效。
-pref-max-tags = 每篇文献最多生成标签数
-pref-max-concurrent-requests = API 最大并发请求数
-pref-requests-per-second = API 每秒最大请求数（RPS）
+pref-collection-rule-add = 添加规则
+pref-collection-rules-list = 已设置的规则
+pref-collection-rules-list-help = 子分类会继承父分类的规则
+
+pref-section-advanced = 高级选项
+pref-max-concurrent-requests = 并发请求数
+pref-requests-per-second = 每秒请求数
 pref-preserve-existing-tags =
-    .label = 保留现有标签，仅追加新标签
+    .label = 保留已有标签
 pref-fallback-attachment-text =
-    .label = PDF 首页提取失败时，回退为附件全文开头
+    .label = 首页提取失败时尝试全文
 pref-debug =
-    .label = 启用调试日志
-pref-help = { $name } v{ $version }，构建时间 { $time }。修改设置后立即生效。
+    .label = 开启调试模式
+
+pref-help = { $name } v{ $version } · 构建于 { $time }

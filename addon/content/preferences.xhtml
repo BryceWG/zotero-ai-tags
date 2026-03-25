@@ -1,86 +1,81 @@
 <linkset>
   <html:link rel="localization" href="__addonRef__-preferences.ftl" />
   <html:style>
-    #__addonRef__-prefs-root { display: flex; flex-direction: column; gap: 14px;
-    padding: 12px 4px 4px; } .__addonRef__-prefs-card { display: flex;
-    flex-direction: column; gap: 10px; padding: 14px; border: 1px solid
-    color-mix(in srgb, currentColor 12%, transparent); border-radius: 10px;
-    background: color-mix(in srgb, var(--material-background) 88%, white); }
-    .__addonRef__-prefs-field { display: flex; flex-direction: column; gap: 6px;
-    } .__addonRef__-prefs-field input, .__addonRef__-prefs-field textarea,
-    .__addonRef__-prefs-field select { width: 100%; padding: 8px 10px; border:
-    1px solid color-mix(in srgb, currentColor 16%, transparent); border-radius:
-    8px; background: color-mix(in srgb, var(--material-background) 94%, white);
-    color: inherit; font: inherit; box-sizing: border-box; }
-    .__addonRef__-prefs-field textarea { min-height: 130px; resize: vertical;
-    line-height: 1.5; } .__addonRef__-prefs-field
-    textarea.__addonRef__-prefs-json { min-height: 88px; font-family: Consolas,
-    "Liberation Mono", Menlo, monospace; } .__addonRef__-prefs-grid { display:
-    grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px,
-    1fr)); } .__addonRef__-prefs-field--full { grid-column: 1 / -1; }
-    .__addonRef__-prefs-actions { display: flex; align-items: center; gap: 10px;
-    flex-wrap: wrap; justify-content: flex-start; } .__addonRef__-prefs-status {
-    min-height: 1.4em; opacity: 0.9; }
-    .__addonRef__-prefs-status[data-state="pending"] { color: color-mix(in srgb,
-    currentColor 78%, #9a6700); }
+    #__addonRef__-prefs-root { display: flex; flex-direction: column; gap: 16px;
+    padding: 8px 0; } .__addonRef__-prefs-card { display: flex; flex-direction:
+    column; gap: 12px; padding: 16px; border: 1px solid color-mix(in srgb,
+    currentColor 10%, transparent); border-radius: 8px; background:
+    var(--material-background); } .__addonRef__-prefs-card-title { font-size:
+    14px; font-weight: 600; margin: 0; padding-bottom: 8px; border-bottom: 1px
+    solid color-mix(in srgb, currentColor 8%, transparent); }
+    .__addonRef__-prefs-field { display: flex; flex-direction: column; gap: 4px;
+    } .__addonRef__-prefs-field label { font-size: 13px; font-weight: 500; }
+    .__addonRef__-prefs-field input, .__addonRef__-prefs-field textarea,
+    .__addonRef__-prefs-field select { width: 100%; padding: 6px 10px; border:
+    1px solid color-mix(in srgb, currentColor 15%, transparent); border-radius:
+    6px; background: color-mix(in srgb, var(--material-background) 95%,
+    currentColor); color: inherit; font: inherit; box-sizing: border-box;
+    min-height: 32px; } .__addonRef__-prefs-field input:focus,
+    .__addonRef__-prefs-field textarea:focus, .__addonRef__-prefs-field
+    select:focus { outline: 2px solid color-mix(in srgb, AccentColor 50%,
+    transparent); outline-offset: -1px; } .__addonRef__-prefs-field textarea {
+    min-height: 100px; resize: vertical; line-height: 1.5; }
+    .__addonRef__-prefs-field textarea.__addonRef__-prefs-json { min-height:
+    60px; font-family: Consolas, "Liberation Mono", Menlo, monospace; font-size:
+    12px; } .__addonRef__-prefs-row { display: grid; gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .__addonRef__-prefs-row--2col { grid-template-columns: repeat(2, 1fr); }
+    .__addonRef__-prefs-row--3col { grid-template-columns: repeat(3, 1fr); }
+    .__addonRef__-prefs-field--full { grid-column: 1 / -1; }
+    .__addonRef__-prefs-actions { display: flex; align-items: center; gap: 8px;
+    flex-wrap: wrap; } .__addonRef__-prefs-status { min-height: 1.4em;
+    font-size: 12px; } .__addonRef__-prefs-status[data-state="pending"] { color:
+    color-mix(in srgb, currentColor 70%, #d4a000); }
     .__addonRef__-prefs-status[data-state="success"] { color: color-mix(in srgb,
-    currentColor 70%, #1a7f37); } .__addonRef__-prefs-status[data-state="error"]
-    { color: color-mix(in srgb, currentColor 70%, #c62828); }
+    currentColor 60%, #2d8a3e); } .__addonRef__-prefs-status[data-state="error"]
+    { color: color-mix(in srgb, currentColor 60%, #c41e3a); }
     .__addonRef__-prefs-checks { display: flex; flex-direction: column; gap:
-    8px; } .__addonRef__-prefs-help { opacity: 0.75; line-height: 1.5; }
-    .__addonRef__-prefs-primary-button, .__addonRef__-prefs-secondary-button {
-    min-height: 36px; padding: 8px 14px; border-radius: 8px; font: inherit;
-    cursor: pointer; } .__addonRef__-prefs-primary-button { border: 1px solid
-    color-mix(in srgb, currentColor 20%, transparent); background: color-mix(in
-    srgb, AccentColor 18%, var(--material-background)); }
-    .__addonRef__-prefs-secondary-button { border: 1px solid color-mix(in srgb,
-    currentColor 16%, transparent); background: color-mix(in srgb,
-    var(--material-background) 94%, white); }
-    .__addonRef__-prefs-primary-button:disabled,
-    .__addonRef__-prefs-secondary-button:disabled { opacity: 0.55; cursor:
-    default; } .__addonRef__-prefs-collection-list { display: flex;
-    flex-direction: column; gap: 10px; } .__addonRef__-prefs-collection-item {
-    display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px
-    solid color-mix(in srgb, currentColor 12%, transparent); border-radius: 8px;
-    background: color-mix(in srgb, var(--material-background) 92%, white); }
-    .__addonRef__-prefs-collection-item-header { display: flex; align-items:
-    center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-    .__addonRef__-prefs-collection-item-title { font-weight: 600; line-height:
-    1.4; } .__addonRef__-prefs-collection-empty { padding: 12px; border: 1px
-    dashed color-mix(in srgb, currentColor 18%, transparent); border-radius:
-    8px; opacity: 0.72; }
+    8px; padding: 4px 0; } .__addonRef__-prefs-help { opacity: 0.7; font-size:
+    12px; line-height: 1.4; margin-top: 2px; } .__addonRef__-prefs-button {
+    padding: 6px 12px; border-radius: 6px; font: inherit; font-size: 13px;
+    cursor: pointer; border: 1px solid color-mix(in srgb, currentColor 15%,
+    transparent); background: color-mix(in srgb, AccentColor 10%,
+    var(--material-background)); min-height: 32px; }
+    .__addonRef__-prefs-button:hover { background: color-mix(in srgb,
+    AccentColor 15%, var(--material-background)); }
+    .__addonRef__-prefs-button:disabled { opacity: 0.5; cursor: default; }
+    .__addonRef__-prefs-collection-list { display: flex; flex-direction: column;
+    gap: 8px; } .__addonRef__-prefs-collection-item { display: flex;
+    flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid
+    color-mix(in srgb, currentColor 10%, transparent); border-radius: 6px;
+    background: color-mix(in srgb, var(--material-background) 97%,
+    currentColor); } .__addonRef__-prefs-collection-item-header { display: flex;
+    align-items: center; justify-content: space-between; gap: 8px; }
+    .__addonRef__-prefs-collection-item-title { font-weight: 600; font-size:
+    13px; } .__addonRef__-prefs-collection-empty { padding: 16px; text-align:
+    center; border: 1px dashed color-mix(in srgb, currentColor 15%,
+    transparent); border-radius: 6px; opacity: 0.6; font-size: 13px; }
+    .__addonRef__-prefs-footer { margin-top: 8px; padding-top: 12px; border-top:
+    1px solid color-mix(in srgb, currentColor 8%, transparent); font-size: 12px;
+    opacity: 0.6; }
   </html:style>
 </linkset>
+
 <groupbox
   onload="Zotero.__addonInstance__.hooks.onPrefsEvent('load', { window })"
 >
   <html:div id="__addonRef__-prefs-root">
+    <!-- API 配置 -->
     <html:div class="__addonRef__-prefs-card">
-      <label><html:h2 data-l10n-id="pref-title"></html:h2></label>
-      <description data-l10n-id="pref-description"></description>
-      <html:div class="__addonRef__-prefs-checks">
-        <checkbox
-          id="zotero-prefpane-__addonRef__-enable"
-          data-l10n-id="pref-enable"
-        />
-        <checkbox
-          id="zotero-prefpane-__addonRef__-preserveExistingTags"
-          data-l10n-id="pref-preserve-existing-tags"
-        />
-        <checkbox
-          id="zotero-prefpane-__addonRef__-fallbackToAttachmentText"
-          data-l10n-id="pref-fallback-attachment-text"
-        />
-        <checkbox
-          id="zotero-prefpane-__addonRef__-debug"
-          data-l10n-id="pref-debug"
-        />
-      </html:div>
-    </html:div>
+      <html:h3
+        class="__addonRef__-prefs-card-title"
+        data-l10n-id="pref-section-api"
+      ></html:h3>
 
-    <html:div class="__addonRef__-prefs-card">
-      <html:div class="__addonRef__-prefs-grid">
-        <html:div class="__addonRef__-prefs-field">
+      <html:div class="__addonRef__-prefs-row">
+        <html:div
+          class="__addonRef__-prefs-field __addonRef__-prefs-field--full"
+        >
           <html:label
             for="zotero-prefpane-__addonRef__-apiBaseURL"
             data-l10n-id="pref-api-base-url"
@@ -90,7 +85,9 @@
             id="zotero-prefpane-__addonRef__-apiBaseURL"
           ></html:input>
         </html:div>
+      </html:div>
 
+      <html:div class="__addonRef__-prefs-row __addonRef__-prefs-row--2col">
         <html:div class="__addonRef__-prefs-field">
           <html:label
             for="zotero-prefpane-__addonRef__-apiKey"
@@ -101,7 +98,6 @@
             id="zotero-prefpane-__addonRef__-apiKey"
           ></html:input>
         </html:div>
-
         <html:div class="__addonRef__-prefs-field">
           <html:label
             for="zotero-prefpane-__addonRef__-model"
@@ -112,46 +108,9 @@
             id="zotero-prefpane-__addonRef__-model"
           ></html:input>
         </html:div>
+      </html:div>
 
-        <html:div class="__addonRef__-prefs-field">
-          <html:label
-            for="zotero-prefpane-__addonRef__-maxTags"
-            data-l10n-id="pref-max-tags"
-          ></html:label>
-          <html:input
-            type="number"
-            min="1"
-            max="20"
-            id="zotero-prefpane-__addonRef__-maxTags"
-          ></html:input>
-        </html:div>
-
-        <html:div class="__addonRef__-prefs-field">
-          <html:label
-            for="zotero-prefpane-__addonRef__-maxConcurrentRequests"
-            data-l10n-id="pref-max-concurrent-requests"
-          ></html:label>
-          <html:input
-            type="number"
-            min="1"
-            max="10"
-            id="zotero-prefpane-__addonRef__-maxConcurrentRequests"
-          ></html:input>
-        </html:div>
-
-        <html:div class="__addonRef__-prefs-field">
-          <html:label
-            for="zotero-prefpane-__addonRef__-requestsPerSecond"
-            data-l10n-id="pref-requests-per-second"
-          ></html:label>
-          <html:input
-            type="number"
-            min="1"
-            max="20"
-            id="zotero-prefpane-__addonRef__-requestsPerSecond"
-          ></html:input>
-        </html:div>
-
+      <html:div class="__addonRef__-prefs-row">
         <html:div
           class="__addonRef__-prefs-field __addonRef__-prefs-field--full"
         >
@@ -170,6 +129,7 @@
           <html:div class="__addonRef__-prefs-actions">
             <html:button
               type="button"
+              class="__addonRef__-prefs-button"
               id="zotero-prefpane-__addonRef__-testAPIConnection"
               data-l10n-id="pref-test-api-connection"
             ></html:button>
@@ -184,50 +144,88 @@
       </html:div>
     </html:div>
 
+    <!-- 标签规则 -->
     <html:div class="__addonRef__-prefs-card">
-      <html:div class="__addonRef__-prefs-field">
-        <html:label
-          for="zotero-prefpane-__addonRef__-userRules"
-          data-l10n-id="pref-user-rules"
-        ></html:label>
-        <description data-l10n-id="pref-user-rules-help"></description>
-        <html:textarea
-          id="zotero-prefpane-__addonRef__-userRules"
-        ></html:textarea>
+      <html:h3
+        class="__addonRef__-prefs-card-title"
+        data-l10n-id="pref-section-rules"
+      ></html:h3>
+
+      <html:div class="__addonRef__-prefs-row __addonRef__-prefs-row--3col">
+        <html:div class="__addonRef__-prefs-field">
+          <html:label
+            for="zotero-prefpane-__addonRef__-maxTags"
+            data-l10n-id="pref-max-tags"
+          ></html:label>
+          <html:input
+            type="number"
+            min="1"
+            max="20"
+            id="zotero-prefpane-__addonRef__-maxTags"
+          ></html:input>
+        </html:div>
+      </html:div>
+
+      <html:div class="__addonRef__-prefs-row">
+        <html:div
+          class="__addonRef__-prefs-field __addonRef__-prefs-field--full"
+        >
+          <html:label
+            for="zotero-prefpane-__addonRef__-userRules"
+            data-l10n-id="pref-user-rules"
+          ></html:label>
+          <description
+            class="__addonRef__-prefs-help"
+            data-l10n-id="pref-user-rules-help"
+          ></description>
+          <html:textarea
+            id="zotero-prefpane-__addonRef__-userRules"
+          ></html:textarea>
+        </html:div>
       </html:div>
     </html:div>
 
+    <!-- 分类规则 -->
     <html:div class="__addonRef__-prefs-card">
-      <html:div class="__addonRef__-prefs-field">
-        <html:label data-l10n-id="pref-collection-rules"></html:label>
-        <description data-l10n-id="pref-collection-rules-help"></description>
-      </html:div>
-      <html:div class="__addonRef__-prefs-field">
-        <html:label
-          for="zotero-prefpane-__addonRef__-collectionRuleCollection"
-          data-l10n-id="pref-collection-rule-collection"
-        ></html:label>
-        <html:div class="__addonRef__-prefs-actions">
-          <html:select
-            id="zotero-prefpane-__addonRef__-collectionRuleCollection"
-          ></html:select>
-          <html:button
-            type="button"
-            class="__addonRef__-prefs-primary-button"
-            id="zotero-prefpane-__addonRef__-addCollectionRule"
-            data-l10n-id="pref-collection-rule-add"
-          ></html:button>
+      <html:h3
+        class="__addonRef__-prefs-card-title"
+        data-l10n-id="pref-section-collection"
+      ></html:h3>
+      <description
+        class="__addonRef__-prefs-help"
+        data-l10n-id="pref-collection-rules-help"
+      ></description>
+
+      <html:div class="__addonRef__-prefs-row __addonRef__-prefs-row--2col">
+        <html:div class="__addonRef__-prefs-field">
+          <html:label
+            for="zotero-prefpane-__addonRef__-collectionRuleCollection"
+            data-l10n-id="pref-collection-rule-collection"
+          ></html:label>
+          <html:div class="__addonRef__-prefs-actions">
+            <html:select
+              id="zotero-prefpane-__addonRef__-collectionRuleCollection"
+            ></html:select>
+            <html:button
+              type="button"
+              class="__addonRef__-prefs-button"
+              id="zotero-prefpane-__addonRef__-addCollectionRule"
+              data-l10n-id="pref-collection-rule-add"
+            ></html:button>
+          </html:div>
+          <html:span
+            class="__addonRef__-prefs-status"
+            id="zotero-prefpane-__addonRef__-collectionRulesStatus"
+            role="status"
+            aria-live="polite"
+          ></html:span>
         </html:div>
-        <html:span
-          class="__addonRef__-prefs-status"
-          id="zotero-prefpane-__addonRef__-collectionRulesStatus"
-          role="status"
-          aria-live="polite"
-        ></html:span>
       </html:div>
+
       <html:div class="__addonRef__-prefs-field">
         <html:label data-l10n-id="pref-collection-rules-list"></html:label>
         <description
+          class="__addonRef__-prefs-help"
           data-l10n-id="pref-collection-rules-list-help"
         ></description>
         <html:div
@@ -236,12 +234,63 @@
         ></html:div>
       </html:div>
     </html:div>
+
+    <!-- 高级选项 -->
+    <html:div class="__addonRef__-prefs-card">
+      <html:h3
+        class="__addonRef__-prefs-card-title"
+        data-l10n-id="pref-section-advanced"
+      ></html:h3>
+
+      <html:div class="__addonRef__-prefs-row __addonRef__-prefs-row--3col">
+        <html:div class="__addonRef__-prefs-field">
+          <html:label
+            for="zotero-prefpane-__addonRef__-maxConcurrentRequests"
+            data-l10n-id="pref-max-concurrent-requests"
+          ></html:label>
+          <html:input
+            type="number"
+            min="1"
+            max="10"
+            id="zotero-prefpane-__addonRef__-maxConcurrentRequests"
+          ></html:input>
+        </html:div>
+        <html:div class="__addonRef__-prefs-field">
+          <html:label
+            for="zotero-prefpane-__addonRef__-requestsPerSecond"
+            data-l10n-id="pref-requests-per-second"
+          ></html:label>
+          <html:input
+            type="number"
+            min="1"
+            max="20"
+            id="zotero-prefpane-__addonRef__-requestsPerSecond"
+          ></html:input>
+        </html:div>
+      </html:div>
+
+      <html:div class="__addonRef__-prefs-checks">
+        <checkbox
+          id="zotero-prefpane-__addonRef__-preserveExistingTags"
+          data-l10n-id="pref-preserve-existing-tags"
+        />
+        <checkbox
+          id="zotero-prefpane-__addonRef__-fallbackToAttachmentText"
+          data-l10n-id="pref-fallback-attachment-text"
+        />
+        <checkbox
+          id="zotero-prefpane-__addonRef__-debug"
+          data-l10n-id="pref-debug"
+        />
+      </html:div>
+    </html:div>
+
+    <!-- 页脚 -->
+    <html:div class="__addonRef__-prefs-footer">
+      <html:label
+        data-l10n-id="pref-help"
+        data-l10n-args='{"time": "__buildTime__","name": "__addonName__","version":"__buildVersion__"}'
+      ></html:label>
+    </html:div>
   </html:div>
 </groupbox>
-<vbox>
-  <html:label
-    class="__addonRef__-prefs-help"
-    data-l10n-id="pref-help"
-    data-l10n-args='{"time": "__buildTime__","name": "__addonName__","version":"__buildVersion__"}'
-  ></html:label>
-</vbox>
