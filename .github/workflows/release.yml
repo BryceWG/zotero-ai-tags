@@ -2,8 +2,11 @@ name: Release
 
 on:
   push:
-    tags:
-      - v**
+    branches:
+      - main
+    paths:
+      - package.json
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -11,11 +14,120 @@ permissions:
   pull-requests: write
 
 jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    outputs:
+      current_version: ${{ steps.meta.outputs.current_version }}
+      previous_version: ${{ steps.meta.outputs.previous_version }}
+      tag: ${{ steps.meta.outputs.tag }}
+      tag_exists: ${{ steps.meta.outputs.tag_exists }}
+      release_exists: ${{ steps.meta.outputs.release_exists }}
+      should_release: ${{ steps.meta.outputs.should_release }}
+      reason: ${{ steps.meta.outputs.reason }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Collect release metadata
+        id: meta
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          current_version=$(node -p "require('./package.json').version")
+          tag="v$current_version"
+          previous_version=''
+
+          if [ "$EVENT_NAME" = 'push' ] \
+            && [ -n "$BEFORE_SHA" ] \
+            && [ "$BEFORE_SHA" != '0000000000000000000000000000000000000000' ] \
+            && git cat-file -e "${BEFORE_SHA}:package.json" 2>/dev/null; then
+            previous_version=$(git show "${BEFORE_SHA}:package.json" | node -e "const fs = require('fs'); const pkg = JSON.parse(fs.readFileSync(0, 'utf8')); process.stdout.write(pkg.version)")
+          fi
+
+          tag_exists='false'
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            tag_exists='true'
+          fi
+
+          release_exists='false'
+          if gh release view "$tag" --repo "$REPOSITORY" >/dev/null 2>&1; then
+            release_exists='true'
+          fi
+
+          should_release='false'
+          reason='version-unchanged'
+
+          if [ "$EVENT_NAME" = 'workflow_dispatch' ]; then
+            should_release='true'
+            reason='manual-dispatch'
+          elif [ "$current_version" != "$previous_version" ]; then
+            should_release='true'
+            reason='version-changed'
+          fi
+
+          if [ "$release_exists" = 'true' ]; then
+            should_release='false'
+            reason='release-already-exists'
+          fi
+
+          echo "current_version=$current_version" >> "$GITHUB_OUTPUT"
+          echo "previous_version=$previous_version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "tag_exists=$tag_exists" >> "$GITHUB_OUTPUT"
+          echo "release_exists=$release_exists" >> "$GITHUB_OUTPUT"
+          echo "should_release=$should_release" >> "$GITHUB_OUTPUT"
+          echo "reason=$reason" >> "$GITHUB_OUTPUT"
+
+          echo "Current version: $current_version"
+          echo "Previous version: ${previous_version:-<none>}"
+          echo "Release tag: $tag"
+          echo "Tag exists: $tag_exists"
+          echo "Release exists: $release_exists"
+          echo "Should release: $should_release ($reason)"
+
+  create-tag:
+    runs-on: ubuntu-latest
+    needs:
+      - prepare-release
+    if: needs.prepare-release.outputs.should_release == 'true' && needs.prepare-release.outputs.tag_exists != 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create and push tag
+        shell: bash
+        run: |
+          tag='${{ needs.prepare-release.outputs.tag }}'
+          git tag "$tag" "$GITHUB_SHA"
+          git push origin "$tag"
+
   create-release:
+    needs:
+      - prepare-release
+      - create-tag
+    if: always() && needs.prepare-release.outputs.should_release == 'true' && (needs.create-tag.result == 'success' || needs.create-tag.result == 'skipped')
     uses: zotero-plugin-dev/workflows/.github/workflows/release-plugin.yml@main
-    # You can customize any of the inputs here.
-    # If you omit an input, its default value will be used.
     with:
       build: "npm run build"
       release: "npm run release"
     secrets: inherit
+
+  skip-release:
+    runs-on: ubuntu-latest
+    needs:
+      - prepare-release
+    if: needs.prepare-release.outputs.should_release != 'true'
+    steps:
+      - name: Report skip reason
+        run: |
+          echo "Skip release: ${{ needs.prepare-release.outputs.reason }}"
+          echo "Current version: ${{ needs.prepare-release.outputs.current_version }}"
+          echo "Tag: ${{ needs.prepare-release.outputs.tag }}"
