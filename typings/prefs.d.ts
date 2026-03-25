@@ -21,6 +21,7 @@ declare namespace _ZoteroTypes {
       "requestsPerSecond": number;
       "preserveExistingTags": boolean;
       "fallbackToAttachmentText": boolean;
+      "enableCollectionRouting": boolean;
       "debug": boolean;
     };
   }

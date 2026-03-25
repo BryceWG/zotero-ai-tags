@@ -44,6 +44,11 @@ export async function registerPrefsScripts(window: Window) {
     "fallbackToAttachmentText",
     getPref("fallbackToAttachmentText"),
   );
+  setCheckboxValue(
+    window,
+    "enableCollectionRouting",
+    getPref("enableCollectionRouting" as never),
+  );
   setCheckboxValue(window, "debug", getPref("debug"));
 
   ensureNumberPref(window, "maxTags", 8, 1, 20);
@@ -58,6 +63,7 @@ export async function registerPrefsScripts(window: Window) {
   bindCheckbox(window, "enable");
   bindCheckbox(window, "preserveExistingTags");
   bindCheckbox(window, "fallbackToAttachmentText");
+  bindCheckbox(window, "enableCollectionRouting" as never);
   bindCheckbox(window, "debug");
 
   bindNumber(window, "maxTags", 8, 1, 20);

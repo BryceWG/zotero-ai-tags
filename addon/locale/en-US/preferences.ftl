@@ -34,6 +34,8 @@ pref-preserve-existing-tags =
     .label = Keep existing tags
 pref-fallback-attachment-text =
     .label = Try full text if first page fails
+pref-enable-collection-routing =
+    .label = If output tags include "@tag", automatically move to corresponding "tag" collection
 pref-debug =
     .label = Enable debug mode
 

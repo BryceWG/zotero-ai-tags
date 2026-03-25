@@ -1,12 +1,20 @@
 import { getString } from "../../utils/locale";
-import { getApplicableCollectionRules } from "./collectionRules";
+import {
+  getApplicableCollectionRules,
+  resolveCollectionRuleCollection,
+} from "./collectionRules";
 import {
   getTaggingPrefs,
   validateLLMRequestPrefs,
   validateTaggingPrefs,
 } from "./prefs";
 import { RequestLimiter } from "./requestLimiter";
-import { BatchSummary, ItemOverview, TaggingPrefs } from "./types";
+import {
+  BatchSummary,
+  CollectionRuleConfig,
+  ItemOverview,
+  TaggingPrefs,
+} from "./types";
 
 const MAX_ABSTRACT_CHARS = 4000;
 const MAX_PDF_CHARS = 6000;
@@ -23,6 +31,11 @@ interface ProgressState {
 
 interface GenerateTagsOptions {
   throwOnFatalError?: boolean;
+}
+
+interface ParsedTagOutput {
+  tags: string[];
+  collectionNames: string[];
 }
 
 class LLMRequestError extends Error {
@@ -116,6 +129,11 @@ async function generateTagsForResolvedItems(
             return;
           }
 
+          const applicableCollectionRules = await getApplicableCollectionRules(
+            item,
+            prefs.collectionRules,
+          );
+
           progressState.queued += 1;
           updateProgressStatus(
             progress,
@@ -139,7 +157,11 @@ async function generateTagsForResolvedItems(
             );
 
             try {
-              return await requestTags(overview, prefs);
+              return await requestTags(
+                overview,
+                prefs,
+                applicableCollectionRules,
+              );
             } finally {
               progressState.requesting = Math.max(
                 0,
@@ -148,15 +170,25 @@ async function generateTagsForResolvedItems(
             }
           });
 
-          const tags = parseTags(raw, prefs.maxTags);
-          if (!tags.length) {
+          const parsedOutput = parseTagOutput(raw, prefs.maxTags);
+          if (!parsedOutput.tags.length) {
             summary.skipped += 1;
             debugLog(prefs, "skip empty tags", item.id, raw);
             return;
           }
 
-          const addedCount = await writeTagsToItem(item, tags, prefs);
-          if (addedCount > 0 || !prefs.preserveExistingTags) {
+          const { addedTagCount, addedCollectionCount } =
+            await applyTagsAndCollectionRouting(
+              item,
+              parsedOutput,
+              applicableCollectionRules,
+              prefs,
+            );
+          if (
+            addedTagCount > 0 ||
+            addedCollectionCount > 0 ||
+            !prefs.preserveExistingTags
+          ) {
             summary.success += 1;
           } else {
             summary.skipped += 1;
@@ -414,8 +446,12 @@ async function waitForPDFViewerApplication(
   throw new Error("PDF 文档尚未就绪");
 }
 
-async function requestTags(overview: ItemOverview, prefs: TaggingPrefs) {
-  const messages = await buildMessages(overview, prefs);
+async function requestTags(
+  overview: ItemOverview,
+  prefs: TaggingPrefs,
+  collectionRules: CollectionRuleConfig[],
+) {
+  const messages = buildMessages(overview, prefs, collectionRules);
   const response = await requestChatCompletionWithRetry(messages, prefs);
   return extractResponseContent(response);
 }
@@ -531,16 +567,24 @@ async function performChatCompletionRequest(
   return response;
 }
 
-async function buildMessages(overview: ItemOverview, prefs: TaggingPrefs) {
+function buildMessages(
+  overview: ItemOverview,
+  prefs: TaggingPrefs,
+  collectionRules: CollectionRuleConfig[],
+) {
   const ruleSections = [`通用规则：\n${prefs.userRules || "无额外规则"}`];
-  const collectionRules = await getApplicableCollectionRules(
-    overview.item,
-    prefs.collectionRules,
-  );
 
   for (const rule of collectionRules) {
     ruleSections.push(`分类规则（${rule.collectionPath}）：\n${rule.rules}`);
   }
+
+  const routingInstructions =
+    prefs.enableCollectionRouting && collectionRules.length
+      ? [
+          "如果需要将文献归入当前命中的分类规则下的某个子分类，可在 tags 中输出以 @ 开头的标签，例如 @Foundation。",
+          "插件会将 @Foundation 解释为对应规则分类下名为 Foundation 的直接子分类归档指令。",
+        ]
+      : [];
 
   return [
     {
@@ -550,6 +594,7 @@ async function buildMessages(overview: ItemOverview, prefs: TaggingPrefs) {
         "请根据用户规则和文献概览生成标签。",
         `最多返回 ${prefs.maxTags} 个标签。`,
         '只返回 JSON，格式必须为 {"tags":["标签1","标签2"]}。',
+        ...routingInstructions,
       ].join("\n"),
     },
     {
@@ -602,7 +647,7 @@ function extractResponseContent(response: { responseText?: string | null }) {
   throw new Error("LLM 返回内容不可解析");
 }
 
-function parseTags(raw: string, maxTags: number) {
+function parseTagOutput(raw: string, maxTags: number) {
   const parsed = parseJSONBlock(raw);
   const candidateTags = Array.isArray(parsed)
     ? parsed
@@ -611,6 +656,7 @@ function parseTags(raw: string, maxTags: number) {
       : [];
 
   const uniqueTags = new Map<string, string>();
+  const uniqueCollectionNames = new Map<string, string>();
   for (const candidate of candidateTags) {
     const normalized = normalizeTag(candidate);
     if (!normalized) {
@@ -620,11 +666,24 @@ function parseTags(raw: string, maxTags: number) {
     if (!uniqueTags.has(key)) {
       uniqueTags.set(key, normalized);
     }
+
+    const collectionName = extractCollectionRouteName(normalized);
+    if (collectionName) {
+      const collectionKey = collectionName.toLocaleLowerCase();
+      if (!uniqueCollectionNames.has(collectionKey)) {
+        uniqueCollectionNames.set(collectionKey, collectionName);
+      }
+    }
+
     if (uniqueTags.size >= maxTags) {
       break;
     }
   }
-  return [...uniqueTags.values()];
+
+  return {
+    tags: [...uniqueTags.values()],
+    collectionNames: [...uniqueCollectionNames.values()],
+  } satisfies ParsedTagOutput;
 }
 
 function parseJSONBlock(raw: string) {
@@ -640,9 +699,10 @@ function parseJSONBlock(raw: string) {
   }
 }
 
-async function writeTagsToItem(
+async function applyTagsAndCollectionRouting(
   item: Zotero.Item,
-  tags: string[],
+  parsedOutput: ParsedTagOutput,
+  collectionRules: CollectionRuleConfig[],
   prefs: TaggingPrefs,
 ) {
   if (!item.isEditable("edit")) {
@@ -660,22 +720,147 @@ async function writeTagsToItem(
       .filter(Boolean),
   );
 
-  let addedCount = 0;
-  for (const tag of tags) {
+  let addedTagCount = 0;
+  for (const tag of parsedOutput.tags) {
     const key = tag.toLocaleLowerCase();
     if (existingTags.has(key)) {
       continue;
     }
     if (item.addTag(tag, 0)) {
       existingTags.add(key);
-      addedCount += 1;
+      addedTagCount += 1;
     }
   }
 
-  if (addedCount > 0 || !prefs.preserveExistingTags) {
+  const addedCollectionCount =
+    prefs.enableCollectionRouting && collectionRules.length
+      ? await routeItemToCollections(
+          item,
+          parsedOutput.collectionNames,
+          collectionRules,
+          prefs,
+        )
+      : 0;
+
+  if (
+    addedTagCount > 0 ||
+    addedCollectionCount > 0 ||
+    !prefs.preserveExistingTags
+  ) {
     await item.saveTx();
   }
-  return addedCount;
+
+  return {
+    addedTagCount,
+    addedCollectionCount,
+  };
+}
+
+async function routeItemToCollections(
+  item: Zotero.Item,
+  collectionNames: string[],
+  collectionRules: CollectionRuleConfig[],
+  prefs: TaggingPrefs,
+) {
+  if (!collectionNames.length) {
+    return 0;
+  }
+
+  let addedCollectionCount = 0;
+  const appliedCollectionIDs = new Set<number>();
+  for (const rule of collectionRules) {
+    const parentCollection = await resolveCollectionRuleCollection(rule);
+    if (!parentCollection) {
+      debugLog(
+        prefs,
+        "collection routing skipped: missing scope collection",
+        item.id,
+        rule.collectionID,
+        rule.collectionPath,
+      );
+      continue;
+    }
+
+    const children = parentCollection.getChildCollections();
+    const childCollectionsByName = new Map<string, Zotero.Collection>();
+    for (const child of children) {
+      const normalizedName = normalizeCollectionName(child.name);
+      if (!normalizedName) {
+        continue;
+      }
+      childCollectionsByName.set(normalizedName.toLocaleLowerCase(), child);
+    }
+
+    for (const collectionName of collectionNames) {
+      const key = collectionName.toLocaleLowerCase();
+      let targetCollection = childCollectionsByName.get(key) || null;
+      if (!targetCollection) {
+        targetCollection = await createChildCollection(
+          rule,
+          parentCollection,
+          collectionName,
+        );
+        childCollectionsByName.set(key, targetCollection);
+        debugLog(
+          prefs,
+          "collection routing created child collection",
+          item.id,
+          rule.collectionID,
+          targetCollection.id,
+          collectionName,
+        );
+      }
+
+      if (
+        appliedCollectionIDs.has(targetCollection.id) ||
+        item.inCollection(targetCollection.id)
+      ) {
+        continue;
+      }
+
+      item.addToCollection(targetCollection.id);
+      appliedCollectionIDs.add(targetCollection.id);
+      addedCollectionCount += 1;
+      debugLog(
+        prefs,
+        "collection routing added item to collection",
+        item.id,
+        rule.collectionID,
+        targetCollection.id,
+        collectionName,
+      );
+    }
+  }
+
+  return addedCollectionCount;
+}
+
+async function createChildCollection(
+  rule: CollectionRuleConfig,
+  parentCollection: Zotero.Collection,
+  collectionName: string,
+) {
+  const collection = new Zotero.Collection({
+    name: collectionName,
+    libraryID: rule.libraryID || parentCollection.libraryID,
+    parentID: parentCollection.id,
+  });
+  await collection.saveTx();
+  return collection;
+}
+
+function extractCollectionRouteName(tag: string) {
+  if (!tag.startsWith("@")) {
+    return "";
+  }
+  return normalizeCollectionName(tag.slice(1));
+}
+
+function normalizeCollectionName(candidate: unknown) {
+  const normalized = normalizeTag(candidate);
+  return normalized.startsWith("@")
+    ? normalizeTag(normalized.slice(1))
+    : normalized;
 }
 
 function cleanText(text: string) {

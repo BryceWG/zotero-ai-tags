@@ -15,4 +15,5 @@ pref("maxConcurrentRequests", 3);
 pref("requestsPerSecond", 3);
 pref("preserveExistingTags", true);
 pref("fallbackToAttachmentText", true);
+pref("enableCollectionRouting", false);
 pref("debug", false);

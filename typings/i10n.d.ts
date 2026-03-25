@@ -48,6 +48,7 @@ export type FluentMessageId =
   | 'pref-debug'
   | 'pref-delete-llm-config'
   | 'pref-description'
+  | 'pref-enable-collection-routing'
   | 'pref-fallback-attachment-text'
   | 'pref-help'
   | 'pref-llm-config-name'

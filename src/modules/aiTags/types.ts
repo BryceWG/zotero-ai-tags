@@ -11,6 +11,7 @@ export interface TaggingPrefs {
   requestsPerSecond: number;
   preserveExistingTags: boolean;
   fallbackToAttachmentText: boolean;
+  enableCollectionRouting: boolean;
   debug: boolean;
 }
 

@@ -32,6 +32,7 @@ export function getTaggingPrefs(): TaggingPrefs {
     requestsPerSecond: clampNumber(getPref("requestsPerSecond"), 1, 20, 3),
     preserveExistingTags: getPref("preserveExistingTags"),
     fallbackToAttachmentText: getPref("fallbackToAttachmentText"),
+    enableCollectionRouting: getPref("enableCollectionRouting" as never),
     debug: getPref("debug"),
   };
 }
