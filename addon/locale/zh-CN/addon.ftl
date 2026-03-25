@@ -1,4 +1,3 @@
-startup-finish = AI 标签插件已就绪
 menu-generate-tags = 生成 AI 标签
 prefs-title = AI 标签
 progress-start = 开始根据摘要与 PDF 首页生成标签

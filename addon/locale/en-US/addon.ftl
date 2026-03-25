@@ -1,4 +1,3 @@
-startup-finish = AI Tags is ready
 menu-generate-tags = Generate AI Tags
 prefs-title = AI Tags
 progress-start = Generating tags from abstract and first-page PDF text

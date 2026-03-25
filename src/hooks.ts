@@ -37,14 +37,6 @@ async function onMainWindowLoad(win: _ZoteroTypes.MainWindow): Promise<void> {
     `${addon.data.config.addonRef}-mainWindow.ftl`,
   );
   registerAITagsMenu(win);
-
-  new ztoolkit.ProgressWindow(addon.data.config.addonName)
-    .createLine({
-      text: getString("startup-finish"),
-      type: "success",
-      progress: 100,
-    })
-    .show();
 }
 
 async function onMainWindowUnload(_win: Window): Promise<void> {

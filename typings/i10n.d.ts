@@ -71,5 +71,4 @@ export type FluentMessageId =
   | 'progress-item-requesting'
   | 'progress-queue-empty'
   | 'progress-start'
-  | 'progress-summary'
-  | 'startup-finish';
+  | 'progress-summary';
