@@ -6,7 +6,8 @@ pref-api-base-url = API Endpoint
 pref-api-key = API Key
 pref-model = Model
 pref-api-extra-params = Advanced Parameters (Optional)
-pref-api-extra-params-help = Enter as JSON, e.g., {"temperature": 0.7}
+pref-api-extra-params-help = Enter JSON and use the example below as a template
+pref-api-extra-params-example = { "{" }"temperature": 0.7, "max_tokens": 2048{ "}" }
 pref-test-api-connection = Test Connection
 
 pref-section-rules = Tag Rules

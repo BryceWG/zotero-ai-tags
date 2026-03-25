@@ -6,7 +6,8 @@ pref-api-base-url = 接口地址
 pref-api-key = API 密钥
 pref-model = 模型
 pref-api-extra-params = 高级参数（可选）
-pref-api-extra-params-help = 以 JSON 格式填写，例如：{"temperature": 0.7}
+pref-api-extra-params-help = 以 JSON 格式填写，可直接参考下面示例
+pref-api-extra-params-example = { "{" }"temperature": 0.7, "max_tokens": 2048{ "}" }
 pref-test-api-connection = 测试连接
 
 pref-section-rules = 标签规则

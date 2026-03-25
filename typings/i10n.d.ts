@@ -29,6 +29,8 @@ export type FluentMessageId =
   | 'menu-generate-tags'
   | 'pref-api-base-url'
   | 'pref-api-extra-params'
+  | 'pref-api-extra-params-example'
+  | 'pref-api-extra-params-help'
   | 'pref-api-key'
   | 'pref-collection-rule-add'
   | 'pref-collection-rule-collection'
