@@ -1,4 +1,5 @@
 import { getString } from "../../utils/locale";
+import { getApplicableCollectionRules } from "./collectionRules";
 import {
   getTaggingPrefs,
   validateLLMRequestPrefs,
@@ -414,7 +415,7 @@ async function waitForPDFViewerApplication(
 }
 
 async function requestTags(overview: ItemOverview, prefs: TaggingPrefs) {
-  const messages = buildMessages(overview, prefs);
+  const messages = await buildMessages(overview, prefs);
   const response = await requestChatCompletionWithRetry(messages, prefs);
   return extractResponseContent(response);
 }
@@ -530,7 +531,17 @@ async function performChatCompletionRequest(
   return response;
 }
 
-function buildMessages(overview: ItemOverview, prefs: TaggingPrefs) {
+async function buildMessages(overview: ItemOverview, prefs: TaggingPrefs) {
+  const ruleSections = [`通用规则：\n${prefs.userRules || "无额外规则"}`];
+  const collectionRules = await getApplicableCollectionRules(
+    overview.item,
+    prefs.collectionRules,
+  );
+
+  for (const rule of collectionRules) {
+    ruleSections.push(`分类规则（${rule.collectionPath}）：\n${rule.rules}`);
+  }
+
   return [
     {
       role: "system",
@@ -544,7 +555,7 @@ function buildMessages(overview: ItemOverview, prefs: TaggingPrefs) {
     {
       role: "user",
       content: [
-        `用户规则：\n${prefs.userRules || "无额外规则"}`,
+        ruleSections.join("\n\n"),
         `文献概览：\n${overview.overviewText}`,
         "请输出适合写入 Zotero 标签栏的中文或英文短标签，避免重复、空值和完整句子。",
       ].join("\n\n"),

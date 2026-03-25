@@ -14,6 +14,7 @@ Generate Zotero tags with an LLM from item abstracts and the first page of attac
 - Builds a compact article overview and sends it to an OpenAI-compatible chat completion API
 - Parses JSON output and writes the generated tags back to the item's tag list
 - Supports user-defined tagging rules in the Zotero preferences pane
+- Supports collection-specific tagging rules that also apply to subcollections
 
 The current implementation is intentionally conservative:
 
@@ -30,6 +31,7 @@ Open `Edit -> Preferences -> Zotero AI Tags` and configure:
 - `Model`
 - `API Extra Params` (JSON object injected into the request body)
 - `Tagging Rules`
+- `Collection Tagging Rules` for selected collections and their subcollections
 - `Maximum tags per item`
 - `Maximum concurrent API requests`
 - `Maximum API requests per second (RPS)`

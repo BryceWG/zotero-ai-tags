@@ -1,4 +1,5 @@
 import { getPref } from "../../utils/prefs";
+import { parseCollectionRulesPref } from "./collectionRules";
 import { TaggingPrefs } from "./types";
 
 export const DEFAULT_USER_RULES = [
@@ -16,6 +17,9 @@ export function getTaggingPrefs(): TaggingPrefs {
     model: String(getPref("model") || "").trim(),
     apiExtraParams: parseAPIExtraParams(getPref("apiExtraParams")),
     userRules: String(getPref("userRules") || DEFAULT_USER_RULES).trim(),
+    collectionRules: parseCollectionRulesPref(
+      getPref("collectionRules" as never),
+    ),
     maxTags: clampNumber(getPref("maxTags"), 1, 20, 8),
     maxConcurrentRequests: clampNumber(
       getPref("maxConcurrentRequests"),

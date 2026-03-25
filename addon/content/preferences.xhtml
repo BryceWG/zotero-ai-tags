@@ -7,12 +7,13 @@
     color-mix(in srgb, currentColor 12%, transparent); border-radius: 10px;
     background: color-mix(in srgb, var(--material-background) 88%, white); }
     .__addonRef__-prefs-field { display: flex; flex-direction: column; gap: 6px;
-    } .__addonRef__-prefs-field input, .__addonRef__-prefs-field textarea {
-    width: 100%; padding: 8px 10px; border: 1px solid color-mix(in srgb,
-    currentColor 16%, transparent); border-radius: 8px; background: color-mix(in
-    srgb, var(--material-background) 94%, white); color: inherit; font: inherit;
-    box-sizing: border-box; } .__addonRef__-prefs-field textarea { min-height:
-    130px; resize: vertical; line-height: 1.5; } .__addonRef__-prefs-field
+    } .__addonRef__-prefs-field input, .__addonRef__-prefs-field textarea,
+    .__addonRef__-prefs-field select { width: 100%; padding: 8px 10px; border:
+    1px solid color-mix(in srgb, currentColor 16%, transparent); border-radius:
+    8px; background: color-mix(in srgb, var(--material-background) 94%, white);
+    color: inherit; font: inherit; box-sizing: border-box; }
+    .__addonRef__-prefs-field textarea { min-height: 130px; resize: vertical;
+    line-height: 1.5; } .__addonRef__-prefs-field
     textarea.__addonRef__-prefs-json { min-height: 88px; font-family: Consolas,
     "Liberation Mono", Menlo, monospace; } .__addonRef__-prefs-grid { display:
     grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px,
@@ -27,6 +28,27 @@
     { color: color-mix(in srgb, currentColor 70%, #c62828); }
     .__addonRef__-prefs-checks { display: flex; flex-direction: column; gap:
     8px; } .__addonRef__-prefs-help { opacity: 0.75; line-height: 1.5; }
+    .__addonRef__-prefs-primary-button, .__addonRef__-prefs-secondary-button {
+    min-height: 36px; padding: 8px 14px; border-radius: 8px; font: inherit;
+    cursor: pointer; } .__addonRef__-prefs-primary-button { border: 1px solid
+    color-mix(in srgb, currentColor 20%, transparent); background: color-mix(in
+    srgb, AccentColor 18%, var(--material-background)); }
+    .__addonRef__-prefs-secondary-button { border: 1px solid color-mix(in srgb,
+    currentColor 16%, transparent); background: color-mix(in srgb,
+    var(--material-background) 94%, white); }
+    .__addonRef__-prefs-primary-button:disabled,
+    .__addonRef__-prefs-secondary-button:disabled { opacity: 0.55; cursor:
+    default; } .__addonRef__-prefs-collection-list { display: flex;
+    flex-direction: column; gap: 10px; } .__addonRef__-prefs-collection-item {
+    display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px
+    solid color-mix(in srgb, currentColor 12%, transparent); border-radius: 8px;
+    background: color-mix(in srgb, var(--material-background) 92%, white); }
+    .__addonRef__-prefs-collection-item-header { display: flex; align-items:
+    center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .__addonRef__-prefs-collection-item-title { font-weight: 600; line-height:
+    1.4; } .__addonRef__-prefs-collection-empty { padding: 12px; border: 1px
+    dashed color-mix(in srgb, currentColor 18%, transparent); border-radius:
+    8px; opacity: 0.72; }
   </html:style>
 </linkset>
 <groupbox
@@ -172,6 +194,46 @@
         <html:textarea
           id="zotero-prefpane-__addonRef__-userRules"
         ></html:textarea>
+      </html:div>
+    </html:div>
+
+    <html:div class="__addonRef__-prefs-card">
+      <html:div class="__addonRef__-prefs-field">
+        <html:label data-l10n-id="pref-collection-rules"></html:label>
+        <description data-l10n-id="pref-collection-rules-help"></description>
+      </html:div>
+      <html:div class="__addonRef__-prefs-field">
+        <html:label
+          for="zotero-prefpane-__addonRef__-collectionRuleCollection"
+          data-l10n-id="pref-collection-rule-collection"
+        ></html:label>
+        <html:div class="__addonRef__-prefs-actions">
+          <html:select
+            id="zotero-prefpane-__addonRef__-collectionRuleCollection"
+          ></html:select>
+          <html:button
+            type="button"
+            class="__addonRef__-prefs-primary-button"
+            id="zotero-prefpane-__addonRef__-addCollectionRule"
+            data-l10n-id="pref-collection-rule-add"
+          ></html:button>
+        </html:div>
+        <html:span
+          class="__addonRef__-prefs-status"
+          id="zotero-prefpane-__addonRef__-collectionRulesStatus"
+          role="status"
+          aria-live="polite"
+        ></html:span>
+      </html:div>
+      <html:div class="__addonRef__-prefs-field">
+        <html:label data-l10n-id="pref-collection-rules-list"></html:label>
+        <description
+          data-l10n-id="pref-collection-rules-list-help"
+        ></description>
+        <html:div
+          class="__addonRef__-prefs-collection-list"
+          id="zotero-prefpane-__addonRef__-collectionRulesList"
+        ></html:div>
       </html:div>
     </html:div>
   </html:div>

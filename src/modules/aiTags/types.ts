@@ -5,12 +5,21 @@ export interface TaggingPrefs {
   model: string;
   apiExtraParams: Record<string, unknown>;
   userRules: string;
+  collectionRules: CollectionRuleConfig[];
   maxTags: number;
   maxConcurrentRequests: number;
   requestsPerSecond: number;
   preserveExistingTags: boolean;
   fallbackToAttachmentText: boolean;
   debug: boolean;
+}
+
+export interface CollectionRuleConfig {
+  libraryID: number;
+  collectionID: number;
+  collectionKey: string;
+  collectionPath: string;
+  rules: string;
 }
 
 export interface ItemOverview {

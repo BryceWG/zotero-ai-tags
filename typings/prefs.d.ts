@@ -13,6 +13,7 @@ declare namespace _ZoteroTypes {
       "model": string;
       "apiExtraParams": string;
       "userRules": string;
+      "collectionRules": string;
       "maxTags": number;
       "maxConcurrentRequests": number;
       "requestsPerSecond": number;
