@@ -14,9 +14,9 @@ export function getTaggingPrefs(): TaggingPrefs {
     apiBaseURL: normalizeURL(getPref("apiBaseURL")),
     apiKey: String(getPref("apiKey") || "").trim(),
     model: String(getPref("model") || "").trim(),
+    apiExtraParams: parseAPIExtraParams(getPref("apiExtraParams")),
     userRules: String(getPref("userRules") || DEFAULT_USER_RULES).trim(),
     maxTags: clampNumber(getPref("maxTags"), 1, 20, 8),
-    timeoutMs: clampNumber(getPref("timeoutMs"), 5000, 120000, 45000),
     maxConcurrentRequests: clampNumber(
       getPref("maxConcurrentRequests"),
       1,
@@ -61,4 +61,27 @@ function normalizeURL(url: string) {
   return String(url || "")
     .trim()
     .replace(/\/+$/, "");
+}
+
+function parseAPIExtraParams(value: unknown) {
+  const raw = String(value || "").trim();
+  if (!raw) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || Array.isArray(parsed) || typeof parsed !== "object") {
+      throw new Error("error-invalid-api-extra-params");
+    }
+    return parsed as Record<string, unknown>;
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message === "error-invalid-api-extra-params"
+    ) {
+      throw error;
+    }
+    throw new Error("error-invalid-api-extra-params");
+  }
 }

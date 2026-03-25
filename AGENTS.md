@@ -73,7 +73,6 @@
 - `model`
 - `userRules`
 - `maxTags`
-- `timeoutMs`
 - `maxConcurrentRequests`
 - `requestsPerSecond`
 - `preserveExistingTags`

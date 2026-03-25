@@ -12,11 +12,13 @@
     currentColor 16%, transparent); border-radius: 8px; background: color-mix(in
     srgb, var(--material-background) 94%, white); color: inherit; font: inherit;
     box-sizing: border-box; } .__addonRef__-prefs-field textarea { min-height:
-    130px; resize: vertical; line-height: 1.5; } .__addonRef__-prefs-grid {
-    display: grid; gap: 10px; grid-template-columns: repeat(auto-fit,
-    minmax(220px, 1fr)); } .__addonRef__-prefs-checks { display: flex;
-    flex-direction: column; gap: 8px; } .__addonRef__-prefs-help { opacity:
-    0.75; line-height: 1.5; }
+    130px; resize: vertical; line-height: 1.5; } .__addonRef__-prefs-field
+    textarea.__addonRef__-prefs-json { min-height: 88px; font-family: Consolas,
+    "Liberation Mono", Menlo, monospace; } .__addonRef__-prefs-grid { display:
+    grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px,
+    1fr)); } .__addonRef__-prefs-field--full { grid-column: 1 / -1; }
+    .__addonRef__-prefs-checks { display: flex; flex-direction: column; gap:
+    8px; } .__addonRef__-prefs-help { opacity: 0.75; line-height: 1.5; }
   </html:style>
 </linkset>
 <groupbox
@@ -96,19 +98,6 @@
 
         <html:div class="__addonRef__-prefs-field">
           <html:label
-            for="zotero-prefpane-__addonRef__-timeoutMs"
-            data-l10n-id="pref-timeout-ms"
-          ></html:label>
-          <html:input
-            type="number"
-            min="5000"
-            step="1000"
-            id="zotero-prefpane-__addonRef__-timeoutMs"
-          ></html:input>
-        </html:div>
-
-        <html:div class="__addonRef__-prefs-field">
-          <html:label
             for="zotero-prefpane-__addonRef__-maxConcurrentRequests"
             data-l10n-id="pref-max-concurrent-requests"
           ></html:label>
@@ -131,6 +120,23 @@
             max="20"
             id="zotero-prefpane-__addonRef__-requestsPerSecond"
           ></html:input>
+        </html:div>
+
+        <html:div
+          class="__addonRef__-prefs-field __addonRef__-prefs-field--full"
+        >
+          <html:label
+            for="zotero-prefpane-__addonRef__-apiExtraParams"
+            data-l10n-id="pref-api-extra-params"
+          ></html:label>
+          <description
+            class="__addonRef__-prefs-help"
+            data-l10n-id="pref-api-extra-params-help"
+          ></description>
+          <html:textarea
+            class="__addonRef__-prefs-json"
+            id="zotero-prefpane-__addonRef__-apiExtraParams"
+          ></html:textarea>
         </html:div>
       </html:div>
     </html:div>

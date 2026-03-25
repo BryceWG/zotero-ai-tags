@@ -13,3 +13,4 @@ error-disabled = 插件已在设置中禁用
 error-missing-api-base = 请先在设置中填写 API Base URL
 error-missing-api-key = 请先在设置中填写 API Key
 error-missing-model = 请先在设置中填写模型名称
+error-invalid-api-extra-params = API 额外参数必须是合法的 JSON 对象

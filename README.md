@@ -28,9 +28,9 @@ Open `Edit -> Preferences -> Zotero AI Tags` and configure:
 - `API Base URL`
 - `API Key`
 - `Model`
+- `API Extra Params` (JSON object injected into the request body)
 - `Tagging Rules`
 - `Maximum tags per item`
-- `Request timeout`
 - `Maximum concurrent API requests`
 - `Maximum API requests per second (RPS)`
 - Whether to keep existing tags

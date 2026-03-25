@@ -11,9 +11,9 @@ declare namespace _ZoteroTypes {
       "apiBaseURL": string;
       "apiKey": string;
       "model": string;
+      "apiExtraParams": string;
       "userRules": string;
       "maxTags": number;
-      "timeoutMs": number;
       "maxConcurrentRequests": number;
       "requestsPerSecond": number;
       "preserveExistingTags": boolean;

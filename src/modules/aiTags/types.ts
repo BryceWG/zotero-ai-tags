@@ -3,9 +3,9 @@ export interface TaggingPrefs {
   apiBaseURL: string;
   apiKey: string;
   model: string;
+  apiExtraParams: Record<string, unknown>;
   userRules: string;
   maxTags: number;
-  timeoutMs: number;
   maxConcurrentRequests: number;
   requestsPerSecond: number;
   preserveExistingTags: boolean;

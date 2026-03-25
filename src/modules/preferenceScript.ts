@@ -21,8 +21,8 @@ export async function registerPrefsScripts(window: Window) {
   setInputValue(window, "apiBaseURL", getPref("apiBaseURL"));
   setInputValue(window, "apiKey", getPref("apiKey"));
   setInputValue(window, "model", getPref("model"));
+  setTextAreaValue(window, "apiExtraParams", getPref("apiExtraParams"));
   ensureNumberPref(window, "maxTags", 8, 1, 20);
-  ensureNumberPref(window, "timeoutMs", 45000, 5000, 120000);
   ensureNumberPref(window, "maxConcurrentRequests", 3, 1, 10);
   ensureNumberPref(window, "requestsPerSecond", 3, 1, 20);
   setTextAreaValue(
@@ -39,8 +39,8 @@ export async function registerPrefsScripts(window: Window) {
   bindText(window, "apiBaseURL");
   bindText(window, "apiKey");
   bindText(window, "model");
+  bindTextArea(window, "apiExtraParams");
   bindNumber(window, "maxTags", 8, 1, 20);
-  bindNumber(window, "timeoutMs", 45000, 5000, 120000);
   bindNumber(window, "maxConcurrentRequests", 3, 1, 10);
   bindNumber(window, "requestsPerSecond", 3, 1, 20);
   bindTextArea(window, "userRules");

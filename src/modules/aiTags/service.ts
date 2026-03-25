@@ -7,6 +7,7 @@ const MAX_ABSTRACT_CHARS = 4000;
 const MAX_PDF_CHARS = 6000;
 const MAX_REQUEST_ATTEMPTS = 3;
 const BASE_RETRY_DELAY_MS = 1000;
+const REQUEST_TIMEOUT_MS = 60000;
 
 interface ProgressState {
   queued: number;
@@ -429,20 +430,25 @@ async function performChatCompletionRequest(
   messages: Array<{ role: "system" | "user"; content: string }>,
   prefs: TaggingPrefs,
 ) {
+  const requestBody: Record<string, unknown> = {
+    model: prefs.model,
+    messages,
+    temperature: 0.2,
+    ...prefs.apiExtraParams,
+  };
+  requestBody.model = prefs.model;
+  requestBody.messages = messages;
+
   const response = await Zotero.HTTP.request(
     "POST",
     `${prefs.apiBaseURL}/chat/completions`,
     {
-      body: JSON.stringify({
-        model: prefs.model,
-        messages,
-        temperature: 0.2,
-      }),
+      body: JSON.stringify(requestBody),
       headers: {
         Authorization: `Bearer ${prefs.apiKey}`,
         "Content-Type": "application/json",
       },
-      timeout: prefs.timeoutMs,
+      timeout: REQUEST_TIMEOUT_MS,
       successCodes: false,
       errorDelayIntervals: [],
       errorDelayMax: 0,

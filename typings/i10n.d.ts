@@ -4,6 +4,7 @@
 // @ts-nocheck
 export type FluentMessageId =
   | 'error-disabled'
+  | 'error-invalid-api-extra-params'
   | 'error-missing-api-base'
   | 'error-missing-api-key'
   | 'error-missing-model'
@@ -11,6 +12,8 @@ export type FluentMessageId =
   | 'main-window-title'
   | 'menu-generate-tags'
   | 'pref-api-base-url'
+  | 'pref-api-extra-params'
+  | 'pref-api-extra-params-help'
   | 'pref-api-key'
   | 'pref-debug'
   | 'pref-description'
@@ -22,7 +25,6 @@ export type FluentMessageId =
   | 'pref-model'
   | 'pref-preserve-existing-tags'
   | 'pref-requests-per-second'
-  | 'pref-timeout-ms'
   | 'pref-title'
   | 'pref-user-rules'
   | 'pref-user-rules-help'
