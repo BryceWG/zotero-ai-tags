@@ -14,3 +14,6 @@ error-missing-api-base = 请先在设置中填写 API Base URL
 error-missing-api-key = 请先在设置中填写 API Key
 error-missing-model = 请先在设置中填写模型名称
 error-invalid-api-extra-params = API 额外参数必须是合法的 JSON 对象
+api-test-start = 正在测试 API 连通性
+api-test-success = API 连通性测试成功
+api-test-failure = API 连通性测试失败：{ $message }

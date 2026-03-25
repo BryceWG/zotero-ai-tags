@@ -1,5 +1,9 @@
 import { getString } from "../../utils/locale";
-import { getTaggingPrefs, validateTaggingPrefs } from "./prefs";
+import {
+  getTaggingPrefs,
+  validateLLMRequestPrefs,
+  validateTaggingPrefs,
+} from "./prefs";
 import { RequestLimiter } from "./requestLimiter";
 import { BatchSummary, ItemOverview, TaggingPrefs } from "./types";
 
@@ -373,23 +377,21 @@ async function waitForPDFViewerApplication(
 async function requestTags(overview: ItemOverview, prefs: TaggingPrefs) {
   const messages = buildMessages(overview, prefs);
   const response = await requestChatCompletionWithRetry(messages, prefs);
-  const payload = JSON.parse(response.responseText || "{}");
-  const content =
-    payload?.choices?.[0]?.message?.content ?? payload?.choices?.[0]?.text;
+  return extractResponseContent(response);
+}
 
-  if (typeof content === "string") {
-    return content;
+export async function testChatCompletionConnection() {
+  const prefs = getTaggingPrefs();
+  validateLLMRequestPrefs(prefs);
+  const response = await requestChatCompletionWithRetry(
+    buildTestMessages(),
+    prefs,
+  );
+  const content = extractResponseContent(response).trim();
+  if (!content) {
+    throw new Error("LLM 返回内容不可解析");
   }
-  if (Array.isArray(content)) {
-    return content
-      .map(
-        (entry: { text?: string; type?: string }) =>
-          entry.text || entry.type || "",
-      )
-      .join("\n");
-  }
-
-  throw new Error("LLM 返回内容不可解析");
+  return content;
 }
 
 async function requestChatCompletionWithRetry(
@@ -509,6 +511,45 @@ function buildMessages(overview: ItemOverview, prefs: TaggingPrefs) {
       ].join("\n\n"),
     },
   ] satisfies Array<{ role: "system" | "user"; content: string }>;
+}
+
+function buildTestMessages() {
+  return [
+    {
+      role: "system",
+      content: [
+        "你是 API 连通性测试助手。",
+        '只返回 JSON，格式必须为 {"ok":true}。',
+      ].join("\n"),
+    },
+    {
+      role: "user",
+      content: [
+        "This is a connection test for Zotero AI Tags.",
+        'Please reply with JSON only: {"ok":true}.',
+      ].join("\n"),
+    },
+  ] satisfies Array<{ role: "system" | "user"; content: string }>;
+}
+
+function extractResponseContent(response: { responseText?: string | null }) {
+  const payload = JSON.parse(response.responseText || "{}");
+  const content =
+    payload?.choices?.[0]?.message?.content ?? payload?.choices?.[0]?.text;
+
+  if (typeof content === "string") {
+    return content;
+  }
+  if (Array.isArray(content)) {
+    return content
+      .map(
+        (entry: { text?: string; type?: string }) =>
+          entry.text || entry.type || "",
+      )
+      .join("\n");
+  }
+
+  throw new Error("LLM 返回内容不可解析");
 }
 
 function parseTags(raw: string, maxTags: number) {

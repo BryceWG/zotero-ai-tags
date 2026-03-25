@@ -1,5 +1,7 @@
 import { config } from "../../package.json";
+import { getString } from "../utils/locale";
 import { DEFAULT_USER_RULES } from "./aiTags/prefs";
+import { testChatCompletionConnection } from "./aiTags/service";
 import { getPref, setPref } from "../utils/prefs";
 
 export async function registerPrefsScripts(window: Window) {
@@ -44,6 +46,79 @@ export async function registerPrefsScripts(window: Window) {
   bindNumber(window, "maxConcurrentRequests", 3, 1, 10);
   bindNumber(window, "requestsPerSecond", 3, 1, 20);
   bindTextArea(window, "userRules");
+  bindTestAPIButton(window);
+}
+
+function bindTestAPIButton(window: Window) {
+  setTestAPIStatus(window, "idle", "");
+  getElement<HTMLButtonElement>(window, "testAPIConnection")?.addEventListener(
+    "click",
+    async (event: Event) => {
+      const button = event.currentTarget as HTMLButtonElement;
+      button.disabled = true;
+      syncAPIRequestPrefs(window);
+      setTestAPIStatus(window, "pending", getString("api-test-start" as never));
+
+      try {
+        await testChatCompletionConnection();
+        setTestAPIStatus(
+          window,
+          "success",
+          getString("api-test-success" as never),
+        );
+      } catch (error) {
+        setTestAPIStatus(
+          window,
+          "error",
+          getString("api-test-failure" as never, {
+            args: { message: getLocalizedErrorMessage(error) },
+          }),
+        );
+      } finally {
+        button.disabled = false;
+      }
+    },
+  );
+}
+
+function setTestAPIStatus(
+  window: Window,
+  state: "idle" | "pending" | "success" | "error",
+  message: string,
+) {
+  const element = getElement<HTMLSpanElement>(
+    window,
+    "testAPIConnectionStatus",
+  );
+  if (!element) {
+    return;
+  }
+  if (state === "idle") {
+    element.removeAttribute("data-state");
+  } else {
+    element.dataset.state = state;
+  }
+  element.textContent = message;
+}
+
+function syncAPIRequestPrefs(window: Window) {
+  setPref("apiBaseURL", getInputValue(window, "apiBaseURL") as never);
+  setPref("apiKey", getInputValue(window, "apiKey") as never);
+  setPref("model", getInputValue(window, "model") as never);
+  setPref(
+    "apiExtraParams",
+    getTextAreaValue(window, "apiExtraParams") as never,
+  );
+}
+
+function getLocalizedErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message) {
+    if (/^error-/.test(error.message)) {
+      return getString(error.message as never);
+    }
+    return error.message;
+  }
+  return String(error);
 }
 
 function bindCheckbox(
@@ -138,6 +213,10 @@ function setInputValue(window: Window, key: string, value: string) {
   }
 }
 
+function getInputValue(window: Window, key: string) {
+  return String(getElement<HTMLInputElement>(window, key)?.value || "").trim();
+}
+
 function ensureNumberPref(
   window: Window,
   key: keyof _ZoteroTypes.Prefs["PluginPrefsMap"],
@@ -168,6 +247,12 @@ function setTextAreaValue(window: Window, key: string, value: string) {
   if (element) {
     element.value = value || "";
   }
+}
+
+function getTextAreaValue(window: Window, key: string) {
+  return String(
+    getElement<HTMLTextAreaElement>(window, key)?.value || "",
+  ).trim();
 }
 
 function getElement<T extends Element>(window: Window, key: string) {

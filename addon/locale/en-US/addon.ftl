@@ -14,3 +14,6 @@ error-missing-api-base = Please configure API Base URL in settings
 error-missing-api-key = Please configure API Key in settings
 error-missing-model = Please configure model name in settings
 error-invalid-api-extra-params = API extra params must be a valid JSON object
+api-test-start = Testing API connectivity
+api-test-success = API connectivity test succeeded
+api-test-failure = API connectivity test failed: { $message }

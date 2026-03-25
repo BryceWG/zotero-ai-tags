@@ -7,6 +7,7 @@ pref-api-key = API Key
 pref-model = Model
 pref-api-extra-params = API Extra Params
 pref-api-extra-params-help = Provide a JSON object to inject into the chat request body, such as extra temperature, max_tokens, or response_format fields.
+pref-test-api-connection = Test API Connection
 pref-user-rules = Tagging Rules
 pref-user-rules-help = These rules are sent together with the abstract and the first PDF page to control tag style and scope.
 pref-max-tags = Maximum tags per item

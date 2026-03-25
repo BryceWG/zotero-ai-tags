@@ -7,6 +7,7 @@ pref-api-key = API Key
 pref-model = 模型名称
 pref-api-extra-params = API 额外参数
 pref-api-extra-params-help = 填写 JSON 对象后会直接注入聊天请求体，可用于补充 temperature、max_tokens、response_format 等字段。
+pref-test-api-connection = 测试 API 连通性
 pref-user-rules = 标签生成规则
 pref-user-rules-help = 这些规则会和条目摘要、PDF 首页文本一起发送给模型，用于约束标签风格与数量。
 pref-max-tags = 每篇文献最多生成标签数

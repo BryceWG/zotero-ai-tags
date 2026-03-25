@@ -17,6 +17,14 @@
     "Liberation Mono", Menlo, monospace; } .__addonRef__-prefs-grid { display:
     grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px,
     1fr)); } .__addonRef__-prefs-field--full { grid-column: 1 / -1; }
+    .__addonRef__-prefs-actions { display: flex; align-items: center; gap: 10px;
+    flex-wrap: wrap; justify-content: flex-start; } .__addonRef__-prefs-status {
+    min-height: 1.4em; opacity: 0.9; }
+    .__addonRef__-prefs-status[data-state="pending"] { color: color-mix(in srgb,
+    currentColor 78%, #9a6700); }
+    .__addonRef__-prefs-status[data-state="success"] { color: color-mix(in srgb,
+    currentColor 70%, #1a7f37); } .__addonRef__-prefs-status[data-state="error"]
+    { color: color-mix(in srgb, currentColor 70%, #c62828); }
     .__addonRef__-prefs-checks { display: flex; flex-direction: column; gap:
     8px; } .__addonRef__-prefs-help { opacity: 0.75; line-height: 1.5; }
   </html:style>
@@ -137,6 +145,19 @@
             class="__addonRef__-prefs-json"
             id="zotero-prefpane-__addonRef__-apiExtraParams"
           ></html:textarea>
+          <html:div class="__addonRef__-prefs-actions">
+            <html:button
+              type="button"
+              id="zotero-prefpane-__addonRef__-testAPIConnection"
+              data-l10n-id="pref-test-api-connection"
+            ></html:button>
+            <html:span
+              class="__addonRef__-prefs-status"
+              id="zotero-prefpane-__addonRef__-testAPIConnectionStatus"
+              role="status"
+              aria-live="polite"
+            ></html:span>
+          </html:div>
         </html:div>
       </html:div>
     </html:div>

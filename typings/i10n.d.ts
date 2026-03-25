@@ -3,6 +3,9 @@
 /* eslint-disable */
 // @ts-nocheck
 export type FluentMessageId =
+  | 'api-test-failure'
+  | 'api-test-start'
+  | 'api-test-success'
   | 'error-disabled'
   | 'error-invalid-api-extra-params'
   | 'error-missing-api-base'
@@ -25,6 +28,7 @@ export type FluentMessageId =
   | 'pref-model'
   | 'pref-preserve-existing-tags'
   | 'pref-requests-per-second'
+  | 'pref-test-api-connection'
   | 'pref-title'
   | 'pref-user-rules'
   | 'pref-user-rules-help'

@@ -34,6 +34,12 @@ export function validateTaggingPrefs(prefs: TaggingPrefs) {
   if (!prefs.enable) {
     throw new Error("error-disabled");
   }
+  validateLLMRequestPrefs(prefs);
+}
+
+export function validateLLMRequestPrefs(
+  prefs: Pick<TaggingPrefs, "apiBaseURL" | "apiKey" | "model">,
+) {
   if (!prefs.apiBaseURL) {
     throw new Error("error-missing-api-base");
   }
