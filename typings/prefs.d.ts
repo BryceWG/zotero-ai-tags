@@ -8,7 +8,15 @@ declare namespace _ZoteroTypes {
   interface Prefs {
     PluginPrefsMap: {
       "enable": boolean;
-      "input": string;
+      "apiBaseURL": string;
+      "apiKey": string;
+      "model": string;
+      "userRules": string;
+      "maxTags": number;
+      "timeoutMs": number;
+      "preserveExistingTags": boolean;
+      "fallbackToAttachmentText": boolean;
+      "debug": boolean;
     };
   }
 }

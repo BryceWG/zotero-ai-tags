@@ -1,131 +1,131 @@
 import { config } from "../../package.json";
-import { getString } from "../utils/locale";
+import { DEFAULT_USER_RULES } from "./aiTags/prefs";
+import { getPref, setPref } from "../utils/prefs";
 
-export async function registerPrefsScripts(_window: Window) {
-  // This function is called when the prefs window is opened
-  // See addon/content/preferences.xhtml onpaneload
-  if (!addon.data.prefs) {
-    addon.data.prefs = {
-      window: _window,
-      columns: [
-        {
-          dataKey: "title",
-          label: getString("prefs-table-title"),
-          fixedWidth: true,
-          width: 100,
-        },
-        {
-          dataKey: "detail",
-          label: getString("prefs-table-detail"),
-        },
-      ],
-      rows: [
-        {
-          title: "Orange",
-          detail: "It's juicy",
-        },
-        {
-          title: "Banana",
-          detail: "It's sweet",
-        },
-        {
-          title: "Apple",
-          detail: "I mean the fruit APPLE",
-        },
-      ],
-    };
-  } else {
-    addon.data.prefs.window = _window;
+export async function registerPrefsScripts(window: Window) {
+  addon.data.prefs = { window };
+
+  setCheckboxValue(window, "enable", getPref("enable"));
+  setCheckboxValue(
+    window,
+    "preserveExistingTags",
+    getPref("preserveExistingTags"),
+  );
+  setCheckboxValue(
+    window,
+    "fallbackToAttachmentText",
+    getPref("fallbackToAttachmentText"),
+  );
+  setCheckboxValue(window, "debug", getPref("debug"));
+
+  setInputValue(window, "apiBaseURL", getPref("apiBaseURL"));
+  setInputValue(window, "apiKey", getPref("apiKey"));
+  setInputValue(window, "model", getPref("model"));
+  setInputValue(window, "maxTags", String(getPref("maxTags")));
+  setInputValue(window, "timeoutMs", String(getPref("timeoutMs")));
+  setTextAreaValue(
+    window,
+    "userRules",
+    getPref("userRules") || DEFAULT_USER_RULES,
+  );
+
+  bindCheckbox(window, "enable");
+  bindCheckbox(window, "preserveExistingTags");
+  bindCheckbox(window, "fallbackToAttachmentText");
+  bindCheckbox(window, "debug");
+
+  bindText(window, "apiBaseURL");
+  bindText(window, "apiKey");
+  bindText(window, "model");
+  bindNumber(window, "maxTags", 8);
+  bindNumber(window, "timeoutMs", 45000);
+  bindTextArea(window, "userRules");
+}
+
+function bindCheckbox(
+  window: Window,
+  key: keyof _ZoteroTypes.Prefs["PluginPrefsMap"],
+) {
+  getElement<XUL.Checkbox>(window, key)?.addEventListener(
+    "command",
+    (event: Event) => {
+      setPref(
+        key,
+        Boolean((event.currentTarget as XUL.Checkbox).checked) as never,
+      );
+    },
+  );
+}
+
+function bindText(
+  window: Window,
+  key: keyof _ZoteroTypes.Prefs["PluginPrefsMap"],
+) {
+  getElement<HTMLInputElement>(window, key)?.addEventListener(
+    "change",
+    (event: Event) => {
+      setPref(
+        key,
+        String((event.currentTarget as HTMLInputElement).value).trim() as never,
+      );
+    },
+  );
+}
+
+function bindTextArea(
+  window: Window,
+  key: keyof _ZoteroTypes.Prefs["PluginPrefsMap"],
+) {
+  getElement<HTMLTextAreaElement>(window, key)?.addEventListener(
+    "change",
+    (event: Event) => {
+      setPref(
+        key,
+        String(
+          (event.currentTarget as HTMLTextAreaElement).value,
+        ).trim() as never,
+      );
+    },
+  );
+}
+
+function bindNumber(
+  window: Window,
+  key: keyof _ZoteroTypes.Prefs["PluginPrefsMap"],
+  fallback: number,
+) {
+  getElement<HTMLInputElement>(window, key)?.addEventListener(
+    "change",
+    (event: Event) => {
+      const value = Number((event.currentTarget as HTMLInputElement).value);
+      setPref(key, (Number.isFinite(value) ? value : fallback) as never);
+    },
+  );
+}
+
+function setCheckboxValue(window: Window, key: string, value: boolean) {
+  const element = getElement<XUL.Checkbox>(window, key);
+  if (element) {
+    element.checked = value;
   }
-  updatePrefsUI();
-  bindPrefEvents();
 }
 
-async function updatePrefsUI() {
-  // You can initialize some UI elements on prefs window
-  // with addon.data.prefs.window.document
-  // Or bind some events to the elements
-  const renderLock = ztoolkit.getGlobal("Zotero").Promise.defer();
-  if (addon.data.prefs?.window == undefined) return;
-  const tableHelper = new ztoolkit.VirtualizedTable(addon.data.prefs?.window)
-    .setContainerId(`${config.addonRef}-table-container`)
-    .setProp({
-      id: `${config.addonRef}-prefs-table`,
-      // Do not use setLocale, as it modifies the Zotero.Intl.strings
-      // Set locales directly to columns
-      columns: addon.data.prefs?.columns,
-      showHeader: true,
-      multiSelect: true,
-      staticColumns: true,
-      disableFontSizeScaling: true,
-    })
-    .setProp("getRowCount", () => addon.data.prefs?.rows.length || 0)
-    .setProp(
-      "getRowData",
-      (index) =>
-        addon.data.prefs?.rows[index] || {
-          title: "no data",
-          detail: "no data",
-        },
-    )
-    // Show a progress window when selection changes
-    .setProp("onSelectionChange", (selection) => {
-      new ztoolkit.ProgressWindow(config.addonName)
-        .createLine({
-          text: `Selected line: ${addon.data.prefs?.rows
-            .filter((v, i) => selection.isSelected(i))
-            .map((row) => row.title)
-            .join(",")}`,
-          progress: 100,
-        })
-        .show();
-    })
-    // When pressing delete, delete selected line and refresh table.
-    // Returning false to prevent default event.
-    .setProp("onKeyDown", (event: KeyboardEvent) => {
-      if (event.key == "Delete" || (Zotero.isMac && event.key == "Backspace")) {
-        addon.data.prefs!.rows =
-          addon.data.prefs?.rows.filter(
-            (v, i) => !tableHelper.treeInstance.selection.isSelected(i),
-          ) || [];
-        tableHelper.render();
-        return false;
-      }
-      return true;
-    })
-    // For find-as-you-type
-    .setProp(
-      "getRowString",
-      (index) => addon.data.prefs?.rows[index].title || "",
-    )
-    // Render the table.
-    .render(-1, () => {
-      renderLock.resolve();
-    });
-  await renderLock.promise;
-  ztoolkit.log("Preference table rendered!");
+function setInputValue(window: Window, key: string, value: string) {
+  const element = getElement<HTMLInputElement>(window, key);
+  if (element) {
+    element.value = value || "";
+  }
 }
 
-function bindPrefEvents() {
-  addon.data
-    .prefs!.window.document?.querySelector(
-      `#zotero-prefpane-${config.addonRef}-enable`,
-    )
-    ?.addEventListener("command", (e: Event) => {
-      ztoolkit.log(e);
-      addon.data.prefs!.window.alert(
-        `Successfully changed to ${(e.target as XUL.Checkbox).checked}!`,
-      );
-    });
+function setTextAreaValue(window: Window, key: string, value: string) {
+  const element = getElement<HTMLTextAreaElement>(window, key);
+  if (element) {
+    element.value = value || "";
+  }
+}
 
-  addon.data
-    .prefs!.window.document?.querySelector(
-      `#zotero-prefpane-${config.addonRef}-input`,
-    )
-    ?.addEventListener("change", (e: Event) => {
-      ztoolkit.log(e);
-      addon.data.prefs!.window.alert(
-        `Successfully changed to ${(e.target as HTMLInputElement).value}!`,
-      );
-    });
+function getElement<T extends Element>(window: Window, key: string) {
+  return window.document.querySelector(
+    `#zotero-prefpane-${config.addonRef}-${key}`,
+  ) as T | null;
 }

@@ -1,32 +1,131 @@
 <linkset>
   <html:link rel="localization" href="__addonRef__-preferences.ftl" />
+  <html:style>
+    #__addonRef__-prefs-root { display: flex; flex-direction: column; gap: 14px;
+    padding: 12px 4px 4px; } .__addonRef__-prefs-card { display: flex;
+    flex-direction: column; gap: 10px; padding: 14px; border: 1px solid
+    color-mix(in srgb, currentColor 12%, transparent); border-radius: 10px;
+    background: color-mix(in srgb, var(--material-background) 88%, white); }
+    .__addonRef__-prefs-field { display: flex; flex-direction: column; gap: 6px;
+    } .__addonRef__-prefs-field input, .__addonRef__-prefs-field textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid color-mix(in srgb,
+    currentColor 16%, transparent); border-radius: 8px; background: color-mix(in
+    srgb, var(--material-background) 94%, white); color: inherit; font: inherit;
+    box-sizing: border-box; } .__addonRef__-prefs-field textarea { min-height:
+    130px; resize: vertical; line-height: 1.5; } .__addonRef__-prefs-grid {
+    display: grid; gap: 10px; grid-template-columns: repeat(auto-fit,
+    minmax(220px, 1fr)); } .__addonRef__-prefs-checks { display: flex;
+    flex-direction: column; gap: 8px; } .__addonRef__-prefs-help { opacity:
+    0.75; line-height: 1.5; }
+  </html:style>
 </linkset>
 <groupbox
   onload="Zotero.__addonInstance__.hooks.onPrefsEvent('load', { window })"
 >
-  <label><html:h2 data-l10n-id="pref-title"></html:h2></label>
-  <checkbox
-    id="zotero-prefpane-__addonRef__-enable"
-    preference="enable"
-    data-l10n-id="pref-enable"
-  />
-  <hbox>
-    <html:label
-      for="zotero-prefpane-__addonRef__-input"
-      data-l10n-id="pref-input"
-    ></html:label>
-    <html:input
-      type="text"
-      id="zotero-prefpane-__addonRef__-input"
-      preference="input"
-    ></html:input>
-  </hbox>
-  <hbox class="virtualized-table-container" flex="1" height="300px">
-    <html:div id="__addonRef__-table-container" />
-  </hbox>
+  <html:div id="__addonRef__-prefs-root">
+    <html:div class="__addonRef__-prefs-card">
+      <label><html:h2 data-l10n-id="pref-title"></html:h2></label>
+      <description data-l10n-id="pref-description"></description>
+      <html:div class="__addonRef__-prefs-checks">
+        <checkbox
+          id="zotero-prefpane-__addonRef__-enable"
+          data-l10n-id="pref-enable"
+        />
+        <checkbox
+          id="zotero-prefpane-__addonRef__-preserveExistingTags"
+          data-l10n-id="pref-preserve-existing-tags"
+        />
+        <checkbox
+          id="zotero-prefpane-__addonRef__-fallbackToAttachmentText"
+          data-l10n-id="pref-fallback-attachment-text"
+        />
+        <checkbox
+          id="zotero-prefpane-__addonRef__-debug"
+          data-l10n-id="pref-debug"
+        />
+      </html:div>
+    </html:div>
+
+    <html:div class="__addonRef__-prefs-card">
+      <html:div class="__addonRef__-prefs-grid">
+        <html:div class="__addonRef__-prefs-field">
+          <html:label
+            for="zotero-prefpane-__addonRef__-apiBaseURL"
+            data-l10n-id="pref-api-base-url"
+          ></html:label>
+          <html:input
+            type="text"
+            id="zotero-prefpane-__addonRef__-apiBaseURL"
+          ></html:input>
+        </html:div>
+
+        <html:div class="__addonRef__-prefs-field">
+          <html:label
+            for="zotero-prefpane-__addonRef__-apiKey"
+            data-l10n-id="pref-api-key"
+          ></html:label>
+          <html:input
+            type="password"
+            id="zotero-prefpane-__addonRef__-apiKey"
+          ></html:input>
+        </html:div>
+
+        <html:div class="__addonRef__-prefs-field">
+          <html:label
+            for="zotero-prefpane-__addonRef__-model"
+            data-l10n-id="pref-model"
+          ></html:label>
+          <html:input
+            type="text"
+            id="zotero-prefpane-__addonRef__-model"
+          ></html:input>
+        </html:div>
+
+        <html:div class="__addonRef__-prefs-field">
+          <html:label
+            for="zotero-prefpane-__addonRef__-maxTags"
+            data-l10n-id="pref-max-tags"
+          ></html:label>
+          <html:input
+            type="number"
+            min="1"
+            max="20"
+            id="zotero-prefpane-__addonRef__-maxTags"
+          ></html:input>
+        </html:div>
+
+        <html:div class="__addonRef__-prefs-field">
+          <html:label
+            for="zotero-prefpane-__addonRef__-timeoutMs"
+            data-l10n-id="pref-timeout-ms"
+          ></html:label>
+          <html:input
+            type="number"
+            min="5000"
+            step="1000"
+            id="zotero-prefpane-__addonRef__-timeoutMs"
+          ></html:input>
+        </html:div>
+      </html:div>
+    </html:div>
+
+    <html:div class="__addonRef__-prefs-card">
+      <html:div class="__addonRef__-prefs-field">
+        <html:label
+          for="zotero-prefpane-__addonRef__-userRules"
+          data-l10n-id="pref-user-rules"
+        ></html:label>
+        <description data-l10n-id="pref-user-rules-help"></description>
+        <html:textarea
+          id="zotero-prefpane-__addonRef__-userRules"
+        ></html:textarea>
+      </html:div>
+    </html:div>
+  </html:div>
 </groupbox>
 <vbox>
   <html:label
+    class="__addonRef__-prefs-help"
     data-l10n-id="pref-help"
     data-l10n-args='{"time": "__buildTime__","name": "__addonName__","version":"__buildVersion__"}'
   ></html:label>
