@@ -31,6 +31,8 @@ Open `Edit -> Preferences -> Zotero AI Tags` and configure:
 - `Tagging Rules`
 - `Maximum tags per item`
 - `Request timeout`
+- `Maximum concurrent API requests`
+- `Maximum API requests per second (RPS)`
 - Whether to keep existing tags
 - Whether to fall back to attachment full text
 - Debug logging

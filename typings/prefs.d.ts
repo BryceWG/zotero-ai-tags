@@ -14,6 +14,8 @@ declare namespace _ZoteroTypes {
       "userRules": string;
       "maxTags": number;
       "timeoutMs": number;
+      "maxConcurrentRequests": number;
+      "requestsPerSecond": number;
       "preserveExistingTags": boolean;
       "fallbackToAttachmentText": boolean;
       "debug": boolean;

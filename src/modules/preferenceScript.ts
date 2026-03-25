@@ -21,8 +21,10 @@ export async function registerPrefsScripts(window: Window) {
   setInputValue(window, "apiBaseURL", getPref("apiBaseURL"));
   setInputValue(window, "apiKey", getPref("apiKey"));
   setInputValue(window, "model", getPref("model"));
-  setInputValue(window, "maxTags", String(getPref("maxTags")));
-  setInputValue(window, "timeoutMs", String(getPref("timeoutMs")));
+  ensureNumberPref(window, "maxTags", 8, 1, 20);
+  ensureNumberPref(window, "timeoutMs", 45000, 5000, 120000);
+  ensureNumberPref(window, "maxConcurrentRequests", 3, 1, 10);
+  ensureNumberPref(window, "requestsPerSecond", 3, 1, 20);
   setTextAreaValue(
     window,
     "userRules",
@@ -37,8 +39,10 @@ export async function registerPrefsScripts(window: Window) {
   bindText(window, "apiBaseURL");
   bindText(window, "apiKey");
   bindText(window, "model");
-  bindNumber(window, "maxTags", 8);
-  bindNumber(window, "timeoutMs", 45000);
+  bindNumber(window, "maxTags", 8, 1, 20);
+  bindNumber(window, "timeoutMs", 45000, 5000, 120000);
+  bindNumber(window, "maxConcurrentRequests", 3, 1, 10);
+  bindNumber(window, "requestsPerSecond", 3, 1, 20);
   bindTextArea(window, "userRules");
 }
 
@@ -93,14 +97,31 @@ function bindNumber(
   window: Window,
   key: keyof _ZoteroTypes.Prefs["PluginPrefsMap"],
   fallback: number,
+  min: number,
+  max: number,
 ) {
-  getElement<HTMLInputElement>(window, key)?.addEventListener(
-    "change",
-    (event: Event) => {
-      const value = Number((event.currentTarget as HTMLInputElement).value);
-      setPref(key, (Number.isFinite(value) ? value : fallback) as never);
-    },
-  );
+  const saveDraftValue = (event: Event) => {
+    const input = event.currentTarget as HTMLInputElement;
+    if (!input.value.trim()) {
+      return;
+    }
+
+    const rawValue = Number(input.value);
+    if (Number.isFinite(rawValue)) {
+      setPref(key, rawValue as never);
+    }
+  };
+
+  const saveNormalizedValue = (event: Event) => {
+    const input = event.currentTarget as HTMLInputElement;
+    const nextValue = normalizeNumberPref(input.value, fallback, min, max);
+    setPref(key, nextValue as never);
+    input.value = String(nextValue);
+  };
+
+  const element = getElement<HTMLInputElement>(window, key);
+  element?.addEventListener("input", saveDraftValue);
+  element?.addEventListener("change", saveNormalizedValue);
 }
 
 function setCheckboxValue(window: Window, key: string, value: boolean) {
@@ -115,6 +136,31 @@ function setInputValue(window: Window, key: string, value: string) {
   if (element) {
     element.value = value || "";
   }
+}
+
+function ensureNumberPref(
+  window: Window,
+  key: keyof _ZoteroTypes.Prefs["PluginPrefsMap"],
+  fallback: number,
+  min: number,
+  max: number,
+) {
+  const value = normalizeNumberPref(getPref(key), fallback, min, max);
+  setPref(key, value as never);
+  setInputValue(window, key, String(value));
+}
+
+function normalizeNumberPref(
+  value: unknown,
+  fallback: number,
+  min: number,
+  max: number,
+) {
+  const parsedValue = Number(value);
+  if (!Number.isFinite(parsedValue)) {
+    return fallback;
+  }
+  return Math.min(max, Math.max(min, Math.round(parsedValue)));
 }
 
 function setTextAreaValue(window: Window, key: string, value: string) {

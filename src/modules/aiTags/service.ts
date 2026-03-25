@@ -1,9 +1,31 @@
 import { getString } from "../../utils/locale";
 import { getTaggingPrefs, validateTaggingPrefs } from "./prefs";
+import { RequestLimiter } from "./requestLimiter";
 import { BatchSummary, ItemOverview, TaggingPrefs } from "./types";
 
 const MAX_ABSTRACT_CHARS = 4000;
 const MAX_PDF_CHARS = 6000;
+const MAX_REQUEST_ATTEMPTS = 3;
+const BASE_RETRY_DELAY_MS = 1000;
+
+interface ProgressState {
+  queued: number;
+  requesting: number;
+  completed: number;
+  total: number;
+}
+
+class LLMRequestError extends Error {
+  constructor(
+    message: string,
+    public readonly retryable: boolean,
+    public readonly status?: number,
+    public readonly retryAfterMs?: number,
+  ) {
+    super(message);
+    this.name = "LLMRequestError";
+  }
+}
 
 export async function generateTagsForSelection() {
   const progress = new ztoolkit.ProgressWindow(addon.data.config.addonName, {
@@ -26,53 +48,107 @@ export async function generateTagsForSelection() {
       throw new Error("error-no-selection");
     }
 
+    const requestLimiter = new RequestLimiter(
+      prefs.maxConcurrentRequests,
+      prefs.requestsPerSecond,
+    );
+
     const summary: BatchSummary = {
       success: 0,
       skipped: 0,
       failed: 0,
     };
 
-    for (const [index, item] of items.entries()) {
-      const title =
-        item.getDisplayTitle() || item.getField("title") || item.key;
-      progress.changeLine({
-        text: getString("progress-item-running", {
-          args: {
-            current: index + 1,
-            total: items.length,
+    const progressState: ProgressState = {
+      queued: 0,
+      requesting: 0,
+      completed: 0,
+      total: items.length,
+    };
+
+    updateProgressStatus(
+      progress,
+      "progress-queue-empty",
+      prefs,
+      progressState,
+    );
+
+    await runWithConcurrency(
+      items,
+      prefs.maxConcurrentRequests,
+      async (item, index) => {
+        const title =
+          item.getDisplayTitle() || item.getField("title") || item.key;
+
+        try {
+          const overview = await buildItemOverview(item, prefs);
+          if (!overview.overviewText) {
+            summary.skipped += 1;
+            debugLog(prefs, "skip empty overview", item.id);
+            return;
+          }
+
+          progressState.queued += 1;
+          updateProgressStatus(
+            progress,
+            "progress-item-queued",
+            prefs,
+            progressState,
             title,
-          },
-        }),
-        progress: Math.round((index / items.length) * 100),
-      });
+            index + 1,
+          );
 
-      try {
-        const overview = await buildItemOverview(item, prefs);
-        if (!overview.overviewText) {
-          summary.skipped += 1;
-          debugLog(prefs, "skip empty overview", item.id);
-          continue;
-        }
+          const raw = await requestLimiter.run(async () => {
+            progressState.queued = Math.max(0, progressState.queued - 1);
+            progressState.requesting += 1;
+            updateProgressStatus(
+              progress,
+              "progress-item-requesting",
+              prefs,
+              progressState,
+              title,
+              index + 1,
+            );
 
-        const raw = await requestTags(overview, prefs);
-        const tags = parseTags(raw, prefs.maxTags);
-        if (!tags.length) {
-          summary.skipped += 1;
-          debugLog(prefs, "skip empty tags", item.id, raw);
-          continue;
-        }
+            try {
+              return await requestTags(overview, prefs);
+            } finally {
+              progressState.requesting = Math.max(
+                0,
+                progressState.requesting - 1,
+              );
+            }
+          });
 
-        const addedCount = await writeTagsToItem(item, tags, prefs);
-        if (addedCount > 0 || !prefs.preserveExistingTags) {
-          summary.success += 1;
-        } else {
-          summary.skipped += 1;
+          const tags = parseTags(raw, prefs.maxTags);
+          if (!tags.length) {
+            summary.skipped += 1;
+            debugLog(prefs, "skip empty tags", item.id, raw);
+            return;
+          }
+
+          const addedCount = await writeTagsToItem(item, tags, prefs);
+          if (addedCount > 0 || !prefs.preserveExistingTags) {
+            summary.success += 1;
+          } else {
+            summary.skipped += 1;
+          }
+        } catch (error) {
+          summary.failed += 1;
+          debugLog(prefs, "tag generation failed", item.id, error);
+        } finally {
+          progressState.completed += 1;
+          updateProgressStatus(
+            progress,
+            "progress-item-completed",
+            prefs,
+            progressState,
+            title,
+            index + 1,
+          );
         }
-      } catch (error) {
-        summary.failed += 1;
-        debugLog(prefs, "tag generation failed", item.id, error);
-      }
-    }
+      },
+    );
 
     progress.changeLine({
       text: getString("progress-summary", {
@@ -295,36 +371,7 @@ async function waitForPDFViewerApplication(
 
 async function requestTags(overview: ItemOverview, prefs: TaggingPrefs) {
   const messages = buildMessages(overview, prefs);
-  const response = await Zotero.HTTP.request(
-    "POST",
-    `${prefs.apiBaseURL}/chat/completions`,
-    {
-      body: JSON.stringify({
-        model: prefs.model,
-        messages,
-        temperature: 0.2,
-      }),
-      headers: {
-        Authorization: `Bearer ${prefs.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      timeout: prefs.timeoutMs,
-      successCodes: false,
-      errorDelayIntervals: [1000],
-      errorDelayMax: 1000,
-    },
-  );
-
-  if (response.status === 401 || response.status === 403) {
-    throw new Error("LLM 认证失败，请检查 API Key");
-  }
-  if (response.status === 429) {
-    throw new Error("LLM 请求过于频繁，请稍后再试");
-  }
-  if (response.status < 200 || response.status >= 300) {
-    throw new Error(`LLM 请求失败，状态码 ${response.status}`);
-  }
-
+  const response = await requestChatCompletionWithRetry(messages, prefs);
   const payload = JSON.parse(response.responseText || "{}");
   const content =
     payload?.choices?.[0]?.message?.content ?? payload?.choices?.[0]?.text;
@@ -342,6 +389,98 @@ async function requestTags(overview: ItemOverview, prefs: TaggingPrefs) {
   }
 
   throw new Error("LLM 返回内容不可解析");
+}
+
+async function requestChatCompletionWithRetry(
+  messages: Array<{ role: "system" | "user"; content: string }>,
+  prefs: TaggingPrefs,
+) {
+  let attempt = 0;
+  let lastError: unknown;
+
+  while (attempt < MAX_REQUEST_ATTEMPTS) {
+    attempt += 1;
+
+    try {
+      return await performChatCompletionRequest(messages, prefs);
+    } catch (error) {
+      const normalizedError = normalizeRequestError(error);
+      lastError = normalizedError;
+
+      if (!normalizedError.retryable || attempt >= MAX_REQUEST_ATTEMPTS) {
+        throw normalizedError;
+      }
+
+      const delayMs = getRetryDelayMs(normalizedError, attempt);
+      debugLog(
+        prefs,
+        `llm request retry ${attempt}/${MAX_REQUEST_ATTEMPTS}`,
+        normalizedError.message,
+        `delay=${delayMs}ms`,
+      );
+      await Zotero.Promise.delay(delayMs);
+    }
+  }
+
+  throw normalizeRequestError(lastError);
+}
+
+async function performChatCompletionRequest(
+  messages: Array<{ role: "system" | "user"; content: string }>,
+  prefs: TaggingPrefs,
+) {
+  const response = await Zotero.HTTP.request(
+    "POST",
+    `${prefs.apiBaseURL}/chat/completions`,
+    {
+      body: JSON.stringify({
+        model: prefs.model,
+        messages,
+        temperature: 0.2,
+      }),
+      headers: {
+        Authorization: `Bearer ${prefs.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      timeout: prefs.timeoutMs,
+      successCodes: false,
+      errorDelayIntervals: [],
+      errorDelayMax: 0,
+    },
+  );
+
+  if (response.status === 401 || response.status === 403) {
+    throw new LLMRequestError(
+      "LLM 认证失败，请检查 API Key",
+      false,
+      response.status,
+    );
+  }
+  if (response.status === 429) {
+    throw new LLMRequestError(
+      "LLM 请求过于频繁，请稍后再试",
+      true,
+      response.status,
+      parseRetryAfterMs(response),
+    );
+  }
+  if (response.status === 408 || response.status >= 500) {
+    throw new LLMRequestError(
+      `LLM 服务暂时不可用，状态码 ${response.status}`,
+      true,
+      response.status,
+      parseRetryAfterMs(response),
+    );
+  }
+  if (response.status < 200 || response.status >= 300) {
+    throw new LLMRequestError(
+      `LLM 请求失败，状态码 ${response.status}`,
+      false,
+      response.status,
+    );
+  }
+
+  return response;
 }
 
 function buildMessages(overview: ItemOverview, prefs: TaggingPrefs) {
@@ -363,7 +502,7 @@ function buildMessages(overview: ItemOverview, prefs: TaggingPrefs) {
         "请输出适合写入 Zotero 标签栏的中文或英文短标签，避免重复、空值和完整句子。",
       ].join("\n\n"),
     },
-  ];
+  ] satisfies Array<{ role: "system" | "user"; content: string }>;
 }
 
 function parseTags(raw: string, maxTags: number) {
@@ -483,8 +622,96 @@ function getErrorMessage(error: unknown) {
   return String(error || "未知错误");
 }
 
+function updateProgressStatus(
+  progress: { changeLine: (options: Record<string, unknown>) => void },
+  key:
+    | "progress-queue-empty"
+    | "progress-item-queued"
+    | "progress-item-requesting"
+    | "progress-item-completed",
+  prefs: TaggingPrefs,
+  state: ProgressState,
+  title = "-",
+  current = state.completed,
+) {
+  progress.changeLine({
+    text: getString(key, {
+      args: {
+        current,
+        total: state.total,
+        title,
+        queued: state.queued,
+        requesting: state.requesting,
+        completed: state.completed,
+        concurrency: prefs.maxConcurrentRequests,
+        rps: prefs.requestsPerSecond,
+      },
+    }),
+    progress: Math.round((state.completed / state.total) * 100),
+  });
+}
+
+function normalizeRequestError(error: unknown) {
+  if (error instanceof LLMRequestError) {
+    return error;
+  }
+
+  const message =
+    error instanceof Error ? error.message : String(error || "未知错误");
+  const retryable = /timeout|timed out|network|offline|ns_error|temporar/i.test(
+    message.toLowerCase(),
+  );
+
+  return new LLMRequestError(message, retryable);
+}
+
+function getRetryDelayMs(error: LLMRequestError, attempt: number) {
+  const jitterMs = Math.floor(Math.random() * 250);
+  if (error.retryAfterMs && error.retryAfterMs > 0) {
+    return error.retryAfterMs + jitterMs;
+  }
+  return BASE_RETRY_DELAY_MS * 2 ** (attempt - 1) + jitterMs;
+}
+
+function parseRetryAfterMs(response: XMLHttpRequest) {
+  const retryAfter = response.getResponseHeader("Retry-After");
+  if (!retryAfter) {
+    return undefined;
+  }
+
+  const seconds = Number(retryAfter);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return seconds * 1000;
+  }
+
+  const dateMs = Date.parse(retryAfter);
+  if (Number.isNaN(dateMs)) {
+    return undefined;
+  }
+
+  return Math.max(0, dateMs - Date.now());
+}
+
 function debugLog(prefs: TaggingPrefs, ...args: unknown[]) {
   if (prefs.debug || addon.data.env === "development") {
     ztoolkit.log(...args);
   }
+}
+
+async function runWithConcurrency<T>(
+  items: T[],
+  concurrency: number,
+  handler: (item: T, index: number) => Promise<void>,
+) {
+  let nextIndex = 0;
+
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+      while (nextIndex < items.length) {
+        const currentIndex = nextIndex;
+        nextIndex += 1;
+        await handler(items[currentIndex], currentIndex);
+      }
+    }),
+  );
 }

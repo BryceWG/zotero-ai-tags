@@ -74,6 +74,8 @@
 - `userRules`
 - `maxTags`
 - `timeoutMs`
+- `maxConcurrentRequests`
+- `requestsPerSecond`
 - `preserveExistingTags`
 - `fallbackToAttachmentText`
 - `debug`

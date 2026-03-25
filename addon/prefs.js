@@ -8,6 +8,8 @@ pref(
 );
 pref("maxTags", 8);
 pref("timeoutMs", 45000);
+pref("maxConcurrentRequests", 3);
+pref("requestsPerSecond", 3);
 pref("preserveExistingTags", true);
 pref("fallbackToAttachmentText", true);
 pref("debug", false);

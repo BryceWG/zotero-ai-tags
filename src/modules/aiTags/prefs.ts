@@ -17,6 +17,13 @@ export function getTaggingPrefs(): TaggingPrefs {
     userRules: String(getPref("userRules") || DEFAULT_USER_RULES).trim(),
     maxTags: clampNumber(getPref("maxTags"), 1, 20, 8),
     timeoutMs: clampNumber(getPref("timeoutMs"), 5000, 120000, 45000),
+    maxConcurrentRequests: clampNumber(
+      getPref("maxConcurrentRequests"),
+      1,
+      10,
+      3,
+    ),
+    requestsPerSecond: clampNumber(getPref("requestsPerSecond"), 1, 20, 3),
     preserveExistingTags: getPref("preserveExistingTags"),
     fallbackToAttachmentText: getPref("fallbackToAttachmentText"),
     debug: getPref("debug"),
