@@ -1,7 +1,7 @@
 {
   "name": "zotero-ai-tags",
   "type": "module",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Generate Zotero tags from abstracts and first-page PDF text with an LLM.",
   "config": {
     "addonName": "Zotero AI Tags",
