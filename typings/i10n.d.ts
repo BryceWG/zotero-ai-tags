@@ -40,6 +40,7 @@ export type FluentMessageId =
   | 'pref-api-extra-params-example'
   | 'pref-api-extra-params-help'
   | 'pref-api-key'
+  | 'pref-auto-generate-new-items'
   | 'pref-collection-rule-add'
   | 'pref-collection-rule-collection'
   | 'pref-collection-rules-help'

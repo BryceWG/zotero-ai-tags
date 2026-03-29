@@ -1,5 +1,9 @@
 import { registerAITagsMenu } from "./modules/aiTags/command";
 import {
+  registerAutoTagObserver,
+  unregisterAutoTagObserver,
+} from "./modules/aiTags/autoTagObserver";
+import {
   generateTagsForItem,
   generateTagsForItems,
   generateTagsForSelection,
@@ -23,6 +27,7 @@ async function onStartup() {
     generateTagsForItems,
     generateTagsForSelection,
   };
+  registerAutoTagObserver();
 
   await Promise.all(
     Zotero.getMainWindows().map((win) => onMainWindowLoad(win)),
@@ -44,6 +49,7 @@ async function onMainWindowUnload(_win: Window): Promise<void> {
 }
 
 function onShutdown(): void {
+  unregisterAutoTagObserver();
   ztoolkit.unregisterAll();
   addon.data.alive = false;
   delete (Zotero as Record<string, unknown>)[addon.data.config.addonInstance];

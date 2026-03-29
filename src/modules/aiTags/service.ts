@@ -31,6 +31,8 @@ interface ProgressState {
 
 interface GenerateTagsOptions {
   throwOnFatalError?: boolean;
+  showProgressWindow?: boolean;
+  saveNotifierData?: Record<string, unknown>;
 }
 
 interface ParsedTagOutput {
@@ -50,36 +52,49 @@ class LLMRequestError extends Error {
   }
 }
 
-export async function generateTagsForSelection() {
+export async function generateTagsForSelection(
+  options: GenerateTagsOptions = {},
+) {
   const items = await getSelectedRegularItems();
-  return generateTagsForResolvedItems(items);
+  return generateTagsForResolvedItems(items, options);
 }
 
-export async function generateTagsForItems(items: Zotero.Item[]) {
+export async function generateTagsForItems(
+  items: Zotero.Item[],
+  options: GenerateTagsOptions = {},
+) {
   const normalizedItems = await normalizeRegularItems(items);
   return generateTagsForResolvedItems(normalizedItems, {
-    throwOnFatalError: true,
+    throwOnFatalError: options.throwOnFatalError ?? true,
+    showProgressWindow: options.showProgressWindow,
+    saveNotifierData: options.saveNotifierData,
   });
 }
 
-export async function generateTagsForItem(item: Zotero.Item) {
-  return generateTagsForItems([item]);
+export async function generateTagsForItem(
+  item: Zotero.Item,
+  options: GenerateTagsOptions = {},
+) {
+  return generateTagsForItems([item], options);
 }
 
 async function generateTagsForResolvedItems(
   items: Zotero.Item[],
   options: GenerateTagsOptions = {},
 ) {
-  const progress = new ztoolkit.ProgressWindow(addon.data.config.addonName, {
-    closeOnClick: true,
-    closeTime: -1,
-  })
-    .createLine({
-      text: getString("progress-start"),
-      type: "default",
-      progress: 0,
-    })
-    .show();
+  const showProgressWindow = options.showProgressWindow !== false;
+  const progress = showProgressWindow
+    ? new ztoolkit.ProgressWindow(addon.data.config.addonName, {
+        closeOnClick: true,
+        closeTime: -1,
+      })
+        .createLine({
+          text: getString("progress-start"),
+          type: "default",
+          progress: 0,
+        })
+        .show()
+    : null;
 
   try {
     const prefs = getTaggingPrefs();
@@ -183,6 +198,7 @@ async function generateTagsForResolvedItems(
               parsedOutput,
               applicableCollectionRules,
               prefs,
+              options.saveNotifierData,
             );
           if (
             addedTagCount > 0 ||
@@ -210,7 +226,7 @@ async function generateTagsForResolvedItems(
       },
     );
 
-    progress.changeLine({
+    progress?.changeLine({
       text: getString("progress-summary", {
         args: {
           success: summary.success,
@@ -221,10 +237,10 @@ async function generateTagsForResolvedItems(
       type: summary.failed > 0 ? "warning" : "success",
       progress: 100,
     });
-    progress.startCloseTimer(8000);
+    progress?.startCloseTimer(8000);
     return summary;
   } catch (error) {
-    progress.changeLine({
+    progress?.changeLine({
       text: getString("progress-failure", {
         args: {
           message: getErrorMessage(error),
@@ -233,7 +249,7 @@ async function generateTagsForResolvedItems(
       type: "error",
       progress: 100,
     });
-    progress.startCloseTimer(10000);
+    progress?.startCloseTimer(10000);
 
     if (options.throwOnFatalError) {
       throw error;
@@ -300,7 +316,7 @@ async function buildItemOverview(item: Zotero.Item, prefs: TaggingPrefs) {
   }
 
   const parts = [
-    title ? `标题：${title}` : "",
+    abstractText || pdfFirstPageText ? (title ? `标题：${title}` : "") : "",
     abstractText ? `摘要：\n${abstractText}` : "",
     pdfFirstPageText ? `PDF 第 1 页：\n${pdfFirstPageText}` : "",
   ].filter(Boolean);
@@ -704,6 +720,7 @@ async function applyTagsAndCollectionRouting(
   parsedOutput: ParsedTagOutput,
   collectionRules: CollectionRuleConfig[],
   prefs: TaggingPrefs,
+  saveNotifierData?: Record<string, unknown>,
 ) {
   if (!item.isEditable("edit")) {
     throw new Error("当前条目不可编辑");
@@ -747,7 +764,9 @@ async function applyTagsAndCollectionRouting(
     addedCollectionCount > 0 ||
     !prefs.preserveExistingTags
   ) {
-    await item.saveTx();
+    await item.saveTx(
+      saveNotifierData ? { notifierData: saveNotifierData } : undefined,
+    );
   }
 
   return {
@@ -905,7 +924,7 @@ function getErrorMessage(error: unknown) {
 }
 
 function updateProgressStatus(
-  progress: { changeLine: (options: Record<string, unknown>) => void },
+  progress: { changeLine: (options: Record<string, unknown>) => void } | null,
   key:
     | "progress-queue-empty"
     | "progress-item-queued"
@@ -916,7 +935,7 @@ function updateProgressStatus(
   title = "-",
   current = state.completed,
 ) {
-  progress.changeLine({
+  progress?.changeLine({
     text: getString(key, {
       args: {
         current,

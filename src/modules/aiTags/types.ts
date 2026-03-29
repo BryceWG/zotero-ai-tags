@@ -1,5 +1,6 @@
 export interface TaggingPrefs {
   enable: boolean;
+  autoGenerateNewItems: boolean;
   apiBaseURL: string;
   apiKey: string;
   model: string;

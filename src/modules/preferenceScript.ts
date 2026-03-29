@@ -46,6 +46,11 @@ export async function registerPrefsScripts(window: Window) {
   );
   setCheckboxValue(
     window,
+    "autoGenerateNewItems" as never,
+    getPref("autoGenerateNewItems" as never),
+  );
+  setCheckboxValue(
+    window,
     "enableCollectionRouting",
     getPref("enableCollectionRouting" as never),
   );
@@ -63,6 +68,7 @@ export async function registerPrefsScripts(window: Window) {
   bindCheckbox(window, "enable");
   bindCheckbox(window, "preserveExistingTags");
   bindCheckbox(window, "fallbackToAttachmentText");
+  bindCheckbox(window, "autoGenerateNewItems" as never);
   bindCheckbox(window, "enableCollectionRouting" as never);
   bindCheckbox(window, "debug");
 

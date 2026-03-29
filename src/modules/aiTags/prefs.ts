@@ -14,6 +14,7 @@ export function getTaggingPrefs(): TaggingPrefs {
   const { activeConfig } = loadLLMConfigState();
   return {
     enable: getPref("enable"),
+    autoGenerateNewItems: getPref("autoGenerateNewItems" as never),
     apiBaseURL: normalizeURL(activeConfig.apiBaseURL),
     apiKey: String(activeConfig.apiKey || "").trim(),
     model: String(activeConfig.model || "").trim(),
